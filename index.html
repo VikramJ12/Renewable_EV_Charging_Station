@@ -1,12 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Vayu–Surya Charging Plaza · Digital Twin</title>
+<title>EV Charging Lab — renewable plaza twin &amp; battery charging explainer</title>
+<meta name="description" content="Two live simulations: a wind-and-solar powered EV charging plaza with battery storage and grid tie, and an animated explainer of how car and truck battery packs actually charge.">
+<meta name="color-scheme" content="dark">
+<meta name="theme-color" content="#04070A">
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20viewBox%3D%270%200%2032%2032%27%3E%3Crect%20width%3D%2732%27%20height%3D%2732%27%20rx%3D%277%27%20fill%3D%27%2304070A%27%2F%3E%3Cpath%20d%3D%27M12%203v13H8l12%2013-3-13h4z%27%20fill%3D%27%2357D3E8%27%2F%3E%3Ccircle%20cx%3D%2724%27%20cy%3D%278%27%20r%3D%272.6%27%20fill%3D%27%23FFB020%27%2F%3E%3C%2Fsvg%3E">
+<meta property="og:type" content="website">
+<meta property="og:title" content="EV Charging Lab">
+<meta property="og:description" content="Two live simulations: a wind-and-solar powered EV charging plaza with battery storage and grid tie, and an animated explainer of how car and truck battery packs actually charge.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
-
+<link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Archivo:wght@400;500;600&family=Barlow+Condensed:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@400;500;600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
 <style>
-:root{
+/* ══════ shell ══════ */
+*{box-sizing:border-box}
+html{background:#04070A; scroll-behavior:smooth}
+@media (prefers-reduced-motion: reduce){ html{scroll-behavior:auto} }
+body{margin:0; padding:0; background:#04070A}
+.pg[hidden]{display:none !important}
+
+.sitenav{
+  position:sticky; top:0; z-index:100; height:46px;
+  background:#04070A; border-bottom:1px solid #18202A;
+}
+.navin{
+  max-width:1560px; margin:0 auto; height:100%; padding:0 20px;
+  display:flex; align-items:center; gap:22px;
+}
+.mark{
+  font-family:"Barlow Condensed","Arial Narrow",sans-serif; font-weight:700;
+  font-size:16px; letter-spacing:.26em; text-transform:uppercase; color:#7E8FA0;
+  white-space:nowrap;
+}
+.mark b{color:#E4ECF3; font-weight:700}
+.tabs{display:flex; gap:2px; height:100%; margin-left:auto}
+.tabs a{
+  display:flex; align-items:center; padding:0 15px; height:100%;
+  font-family:"Barlow Condensed","Arial Narrow",sans-serif; font-size:14px;
+  letter-spacing:.15em; text-transform:uppercase; color:#68788A; text-decoration:none;
+  border-bottom:2px solid transparent; transition:color .16s, border-color .16s;
+  white-space:nowrap;
+}
+.tabs a:hover{color:#C9D6E2}
+.tabs a:focus-visible{outline:2px solid #57D3E8; outline-offset:-3px}
+.tabs a[aria-current=page]{color:#EAF2F8}
+.tabs a[data-page=plaza][aria-current=page]{border-bottom-color:#57D3E8}
+.tabs a[data-page=battery][aria-current=page]{border-bottom-color:#C97A45}
+.tabs a i{
+  font-style:normal; font-family:"Space Mono",monospace; font-size:10px;
+  color:#3F4C5A; margin-right:7px;
+}
+@media(max-width:620px){
+  .navin{gap:10px; padding:0 12px}
+  .mark{font-size:13px; letter-spacing:.16em}
+  .tabs a{padding:0 9px; font-size:12px; letter-spacing:.08em}
+  .tabs a i{display:none}
+}
+
+/* the plaza dialog must sit above the site chrome */
+.pg-plaza .spot{z-index:200}
+/* the battery dock is sticky too, so park it under the nav */
+.pg-batt .dock{top:46px}
+
+/* ══════ page: charging plaza ══════ */
+.pg-plaza{
   --void:#070B10; --steel:#0E1621; --steel2:#131F2C; --rail:#1D2C3B; --rail2:#2A3D50;
   --txt:#D8E3ED; --mut:#6F8598; --mut2:#4C5F72;
   --solar:#FFB020; --wind:#57D3E8; --store:#9D7BFF; --grid:#FF7A6B; --ev:#45E0A0; --rest:#FF9A5C;
@@ -14,133 +74,274 @@
   --mono:"IBM Plex Mono", ui-monospace, "SFMono-Regular", Consolas, monospace;
   --body:"Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
 }
-*{box-sizing:border-box}
-html,body{margin:0;padding:0}
-body{
+.pg-plaza{margin:0;padding:0}
+.pg-plaza{
   background:var(--void); color:var(--txt); font-family:var(--body);
   font-size:13px; line-height:1.45; -webkit-font-smoothing:antialiased;
 }
-.nameplate{
+.pg-plaza .nameplate{
   font-family:var(--disp); text-transform:uppercase; letter-spacing:.14em; font-weight:600;
 }
-
-/* ── shell ─────────────────────────────────────────────── */
-.shell{max-width:1560px; margin:0 auto; padding:14px 16px 40px}
-
-header.bar{
+.pg-plaza .shell{max-width:1560px; margin:0 auto; padding:14px 16px 40px}
+.pg-plaza header.bar{
   display:flex; flex-wrap:wrap; align-items:center; gap:14px;
   border:1px solid var(--rail); background:linear-gradient(180deg,var(--steel2),var(--steel));
   border-radius:3px; padding:10px 14px; margin-bottom:12px;
 }
-.brand{display:flex; align-items:baseline; gap:10px; margin-right:auto}
-.brand h1{font-family:var(--disp); font-size:23px; letter-spacing:.16em; text-transform:uppercase; margin:0; font-weight:700}
-.brand .sub{font-family:var(--mono); font-size:10px; color:var(--mut); letter-spacing:.08em}
-.clock{font-family:var(--mono); font-size:22px; font-weight:600; letter-spacing:.04em; font-variant-numeric:tabular-nums}
-.clock small{font-size:10px; color:var(--mut); letter-spacing:.14em; display:block; text-align:right; font-family:var(--disp); text-transform:uppercase}
-.ctrls{display:flex; gap:6px; align-items:center}
-
-button,select,input[type=number]{font-family:var(--disp); color:var(--txt)}
-.btn{
+.pg-plaza .brand{display:flex; align-items:baseline; gap:10px; margin-right:auto}
+.pg-plaza .brand h1{font-family:var(--disp); font-size:23px; letter-spacing:.16em; text-transform:uppercase; margin:0; font-weight:700}
+.pg-plaza .brand .sub{font-family:var(--mono); font-size:10px; color:var(--mut); letter-spacing:.08em}
+.pg-plaza .clock{font-family:var(--mono); font-size:22px; font-weight:600; letter-spacing:.04em; font-variant-numeric:tabular-nums}
+.pg-plaza .clock small{font-size:10px; color:var(--mut); letter-spacing:.14em; display:block; text-align:right; font-family:var(--disp); text-transform:uppercase}
+.pg-plaza .ctrls{display:flex; gap:6px; align-items:center}
+.pg-plaza button, .pg-plaza select, .pg-plaza input[type=number]{font-family:var(--disp); color:var(--txt)}
+.pg-plaza .btn{
   background:var(--steel2); border:1px solid var(--rail2); border-radius:2px;
   padding:6px 12px; font-size:12px; letter-spacing:.12em; text-transform:uppercase;
   cursor:pointer; transition:border-color .15s, background .15s, color .15s;
 }
-.btn:hover{border-color:var(--wind); color:#fff}
-.btn:focus-visible{outline:2px solid var(--wind); outline-offset:2px}
-.btn.on{background:var(--wind); border-color:var(--wind); color:#04202b; font-weight:700}
-.btn.warn.on{background:var(--grid); border-color:var(--grid); color:#2b0a06}
-
-/* ── layout ────────────────────────────────────────────── */
-.grid-main{display:grid; grid-template-columns:minmax(0,1fr) 320px; gap:12px}
-@media(max-width:1080px){ .grid-main{grid-template-columns:minmax(0,1fr)} }
-
-.panel{border:1px solid var(--rail); background:var(--steel); border-radius:3px}
-.panel > .head{
+.pg-plaza .btn:hover{border-color:var(--wind); color:#fff}
+.pg-plaza .btn:focus-visible{outline:2px solid var(--wind); outline-offset:2px}
+.pg-plaza .btn.on{background:var(--wind); border-color:var(--wind); color:#04202b; font-weight:700}
+.pg-plaza .btn.warn.on{background:var(--grid); border-color:var(--grid); color:#2b0a06}
+.pg-plaza .grid-main{display:grid; grid-template-columns:minmax(0,1fr) 320px; gap:12px}
+@media(max-width:1080px){
+  .pg-plaza .grid-main{grid-template-columns:minmax(0,1fr)}
+}
+.pg-plaza .panel{border:1px solid var(--rail); background:var(--steel); border-radius:3px}
+.pg-plaza .panel > .head{
   display:flex; align-items:center; gap:8px; padding:7px 12px;
   border-bottom:1px solid var(--rail); background:var(--steel2);
 }
-.panel > .head h2{margin:0; font-family:var(--disp); font-size:12px; letter-spacing:.18em; text-transform:uppercase; color:var(--mut)}
-.panel > .head .tag{margin-left:auto; font-family:var(--mono); font-size:10px; color:var(--mut2)}
-
-/* ── scene ─────────────────────────────────────────────── */
-#scene{display:block; width:100%; height:auto; background:#000}
-.svgtxt{font-family:var(--mono); font-size:11px; fill:var(--txt)}
-.svglbl{font-family:var(--disp); font-size:11.5px; letter-spacing:.16em; text-transform:uppercase; fill:var(--mut)}
-.flow{fill:none; stroke-linecap:round}
-.track{fill:none; stroke:#16222E; stroke-width:2.5}
-.carslide{transition:transform .85s cubic-bezier(.2,.8,.25,1), opacity .5s}
-@media (prefers-reduced-motion: reduce){ .carslide{transition:none} }
-
-/* ── control column ────────────────────────────────────── */
-.ctlbody{padding:12px}
-.field{margin-bottom:13px}
-.field label{
+.pg-plaza .panel > .head h2{margin:0; font-family:var(--disp); font-size:12px; letter-spacing:.18em; text-transform:uppercase; color:var(--mut)}
+.pg-plaza .panel > .head .tag{margin-left:auto; font-family:var(--mono); font-size:10px; color:var(--mut2)}
+.pg-plaza #scene{display:block; width:100%; height:auto; background:#000}
+.pg-plaza .svgtxt{font-family:var(--mono); font-size:11px; fill:var(--txt)}
+.pg-plaza .svglbl{font-family:var(--disp); font-size:11.5px; letter-spacing:.16em; text-transform:uppercase; fill:var(--mut)}
+.pg-plaza .flow{fill:none; stroke-linecap:round}
+.pg-plaza .track{fill:none; stroke:#16222E; stroke-width:2.5}
+.pg-plaza .carslide{transition:transform .85s cubic-bezier(.2,.8,.25,1), opacity .5s}
+@media (prefers-reduced-motion: reduce){
+  .pg-plaza .carslide{transition:none}
+}
+.pg-plaza .ctlbody{padding:12px}
+.pg-plaza .field{margin-bottom:13px}
+.pg-plaza .field label{
   display:flex; justify-content:space-between; align-items:baseline;
   font-family:var(--disp); font-size:11px; letter-spacing:.15em; text-transform:uppercase; color:var(--mut); margin-bottom:5px;
 }
-.field label b{font-family:var(--mono); font-size:12px; color:var(--txt); font-weight:500; letter-spacing:0}
-input[type=range]{width:100%; -webkit-appearance:none; appearance:none; background:transparent; height:16px; margin:0}
-input[type=range]::-webkit-slider-runnable-track{height:2px; background:var(--rail2)}
-input[type=range]::-moz-range-track{height:2px; background:var(--rail2)}
-input[type=range]::-webkit-slider-thumb{-webkit-appearance:none; width:12px; height:12px; background:var(--wind); border-radius:50%; margin-top:-5px; cursor:pointer}
-input[type=range]::-moz-range-thumb{width:12px; height:12px; background:var(--wind); border:0; border-radius:50%; cursor:pointer}
-input[type=range]:focus-visible{outline:2px solid var(--wind); outline-offset:3px}
-select,input[type=number]{
+.pg-plaza .field label b{font-family:var(--mono); font-size:12px; color:var(--txt); font-weight:500; letter-spacing:0}
+.pg-plaza input[type=range]{width:100%; -webkit-appearance:none; appearance:none; background:transparent; height:16px; margin:0}
+.pg-plaza input[type=range]::-webkit-slider-runnable-track{height:2px; background:var(--rail2)}
+.pg-plaza input[type=range]::-moz-range-track{height:2px; background:var(--rail2)}
+.pg-plaza input[type=range]::-webkit-slider-thumb{-webkit-appearance:none; width:12px; height:12px; background:var(--wind); border-radius:50%; margin-top:-5px; cursor:pointer}
+.pg-plaza input[type=range]::-moz-range-thumb{width:12px; height:12px; background:var(--wind); border:0; border-radius:50%; cursor:pointer}
+.pg-plaza input[type=range]:focus-visible{outline:2px solid var(--wind); outline-offset:3px}
+.pg-plaza select, .pg-plaza input[type=number]{
   width:100%; background:var(--steel2); border:1px solid var(--rail2); border-radius:2px;
   padding:5px 7px; font-size:12px; letter-spacing:.06em;
 }
-.two{display:grid; grid-template-columns:1fr 1fr; gap:8px}
-.toggles{display:grid; gap:6px}
-.tg{
+.pg-plaza .two{display:grid; grid-template-columns:1fr 1fr; gap:8px}
+.pg-plaza .toggles{display:grid; gap:6px}
+.pg-plaza .tg{
   display:flex; align-items:center; gap:8px; cursor:pointer; user-select:none;
   font-family:var(--disp); font-size:11.5px; letter-spacing:.1em; text-transform:uppercase; color:var(--mut);
   border:1px solid var(--rail); border-radius:2px; padding:6px 8px;
 }
-.tg input{accent-color:var(--ev); width:13px; height:13px; margin:0}
-.tg.act{color:var(--txt); border-color:var(--rail2)}
-.presets{display:grid; grid-template-columns:1fr 1fr; gap:6px; margin-top:2px}
-.presets .btn{padding:5px 4px; font-size:11px; letter-spacing:.08em}
+.pg-plaza .tg input{accent-color:var(--ev); width:13px; height:13px; margin:0}
+.pg-plaza .tg.act{color:var(--txt); border-color:var(--rail2)}
+.pg-plaza .presets{display:grid; grid-template-columns:1fr 1fr; gap:6px; margin-top:2px}
+.pg-plaza .presets .btn{padding:5px 4px; font-size:11px; letter-spacing:.08em}
+.pg-plaza .kpis{display:grid; grid-template-columns:repeat(4,1fr); gap:1px; background:var(--rail)}
+@media(max-width:760px){
+  .pg-plaza .kpis{grid-template-columns:repeat(2,1fr)}
+}
+.pg-plaza .kpi{background:var(--steel); padding:9px 11px}
+.pg-plaza .kpi .k{font-family:var(--disp); font-size:10px; letter-spacing:.16em; text-transform:uppercase; color:var(--mut2)}
+.pg-plaza .kpi .v{font-family:var(--mono); font-size:19px; font-weight:600; font-variant-numeric:tabular-nums; margin-top:2px}
+.pg-plaza .kpi .u{font-size:10px; color:var(--mut); font-family:var(--disp); letter-spacing:.1em}
+.pg-plaza .bays{display:grid; grid-template-columns:repeat(5,1fr); gap:1px; background:var(--rail)}
+@media(max-width:900px){
+  .pg-plaza .bays{grid-template-columns:repeat(2,1fr)}
+}
+.pg-plaza .bay{background:var(--steel); padding:8px 9px; min-height:86px; border-top:2px solid var(--rail2)}
+.pg-plaza .bay.dc{border-top-color:var(--grid)}
+.pg-plaza .bay.ac{border-top-color:var(--ev)}
+.pg-plaza .bay .bh{display:flex; justify-content:space-between; align-items:baseline}
+.pg-plaza .bay .bid{font-family:var(--disp); font-size:12px; letter-spacing:.14em; color:var(--mut)}
+.pg-plaza .bay .bkw{font-family:var(--mono); font-size:12px; color:var(--mut2)}
+.pg-plaza .bay .bcar{font-size:11.5px; margin-top:4px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+.pg-plaza .bay .bfree{font-family:var(--disp); font-size:12px; letter-spacing:.14em; color:var(--mut2); margin-top:6px}
+.pg-plaza .socbar{height:5px; background:#16222E; border-radius:1px; margin-top:6px; overflow:hidden}
+.pg-plaza .socbar i{display:block; height:100%; background:var(--ev); transition:width .3s}
+.pg-plaza .bay .bstat{display:flex; justify-content:space-between; font-family:var(--mono); font-size:10.5px; color:var(--mut); margin-top:4px}
+.pg-plaza .lower{display:grid; grid-template-columns:minmax(0,1.55fr) minmax(0,1fr); gap:12px; margin-top:12px}
+@media(max-width:1080px){
+  .pg-plaza .lower{grid-template-columns:minmax(0,1fr)}
+}
+.pg-plaza canvas{display:block; width:100%}
+.pg-plaza .legend{display:flex; flex-wrap:wrap; gap:12px; padding:8px 12px; border-top:1px solid var(--rail)}
+.pg-plaza .legend span{display:flex; align-items:center; gap:5px; font-family:var(--disp); font-size:11px; letter-spacing:.12em; text-transform:uppercase; color:var(--mut)}
+.pg-plaza .legend i{width:9px; height:9px; border-radius:1px; display:block}
+.pg-plaza #log{height:214px; overflow-y:auto; padding:6px 0; font-family:var(--mono); font-size:11px}
+.pg-plaza #log div{padding:2px 12px; display:flex; gap:9px; border-bottom:1px solid #101A24}
+.pg-plaza #log time{color:var(--mut2); flex:none}
+.pg-plaza #log b{font-weight:500}
+.pg-plaza .spec{padding:10px 12px; font-family:var(--mono); font-size:11px; color:var(--mut); line-height:1.7}
+.pg-plaza .spec b{color:var(--txt); font-weight:500}
+.pg-plaza .spec .row{display:flex; justify-content:space-between; gap:10px; border-bottom:1px dotted #182533; padding:1px 0}
+.pg-plaza .btn.tiny{padding:3px 9px; font-size:11px; letter-spacing:.1em; margin-left:8px}
+.pg-plaza #chart{cursor:zoom-in}
+.pg-plaza .spot{
+  position:fixed; inset:0; z-index:60; display:none;
+  background:rgba(4,7,11,.94); padding:18px; flex-direction:column;
+}
+.pg-plaza .spot.on{display:flex}
+.pg-plaza .sphead{display:flex; align-items:center; gap:14px; margin-bottom:10px; flex:none}
+.pg-plaza .sphead h2{margin:0; font-size:17px; letter-spacing:.16em}
+.pg-plaza .spnote{font-family:var(--mono); font-size:11px; color:var(--mut2); margin-right:auto}
+.pg-plaza .spbody{flex:1; min-height:0; display:flex; flex-direction:column; border:1px solid var(--rail); background:var(--steel); border-radius:3px}
+.pg-plaza #bigWrap{flex:1; min-height:0; position:relative}
+.pg-plaza #chartBig{position:absolute; inset:0; width:100%; cursor:crosshair}
+.pg-plaza footer{margin-top:16px; font-family:var(--mono); font-size:10.5px; color:var(--mut2); line-height:1.7}
 
-/* ── KPI ───────────────────────────────────────────────── */
-.kpis{display:grid; grid-template-columns:repeat(4,1fr); gap:1px; background:var(--rail)}
-@media(max-width:760px){ .kpis{grid-template-columns:repeat(2,1fr)} }
-.kpi{background:var(--steel); padding:9px 11px}
-.kpi .k{font-family:var(--disp); font-size:10px; letter-spacing:.16em; text-transform:uppercase; color:var(--mut2)}
-.kpi .v{font-family:var(--mono); font-size:19px; font-weight:600; font-variant-numeric:tabular-nums; margin-top:2px}
-.kpi .u{font-size:10px; color:var(--mut); font-family:var(--disp); letter-spacing:.1em}
+/* ══════ page: inside the charge ══════ */
+.pg-batt{
+  --graphite:#111317; --carbon:#191D23; --carbon2:#212730; --edge:#2C333D; --edge2:#3B444F;
+  --txt:#EAE6DE; --mut:#98A2AE; --mut2:#616D7A;
+  --copper:#C97A45; --alu:#9AA9B6; --ion:#6FD8FF; --electro:#E8B84B; --heat:#FF5C7A; --ok:#5EE0A8;
+  --disp:"Archivo Black","Arial Black",sans-serif;
+  --body:"Archivo",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --mono:"Space Mono",ui-monospace,Consolas,monospace;
+}
+.pg-batt{
+  margin:0; background:var(--graphite); color:var(--txt);
+  font-family:var(--body); font-size:15px; line-height:1.6;
+  -webkit-font-smoothing:antialiased;
+}
+.pg-batt .wrap{max-width:1180px; margin:0 auto; padding:0 20px}
+.pg-batt h1, .pg-batt h2, .pg-batt h3{font-family:var(--disp); font-weight:400; line-height:1.02; letter-spacing:-.02em; margin:0}
+.pg-batt .eyebrow{
+  font-family:var(--mono); font-size:11px; letter-spacing:.28em; text-transform:uppercase;
+  color:var(--copper); margin-bottom:14px; display:block;
+}
+.pg-batt .lede{font-size:18px; color:var(--mut); max-width:62ch}
+.pg-batt .num{font-family:var(--mono); font-variant-numeric:tabular-nums}
+.pg-batt .dock{
+  position:sticky; top:0; z-index:40; background:rgba(17,19,23,.93);
+  backdrop-filter:blur(12px); border-bottom:1px solid var(--edge);
+}
+.pg-batt .dockin{max-width:1180px; margin:0 auto; padding:9px 20px; display:flex; flex-wrap:wrap; gap:9px 18px; align-items:center}
+.pg-batt .grp{display:flex; align-items:center; gap:6px}
+.pg-batt .grp > .gl{font-family:var(--mono); font-size:10px; letter-spacing:.16em; text-transform:uppercase; color:var(--mut2); margin-right:2px}
+.pg-batt .chip{
+  font-family:var(--body); font-weight:500; font-size:12.5px; color:var(--mut);
+  background:var(--carbon); border:1px solid var(--edge); border-radius:999px;
+  padding:5px 13px; cursor:pointer; transition:all .16s; white-space:nowrap;
+}
+.pg-batt .chip:hover:not(:disabled){border-color:var(--edge2); color:var(--txt)}
+.pg-batt .chip:focus-visible{outline:2px solid var(--ion); outline-offset:2px}
+.pg-batt .chip[aria-pressed=true]{background:var(--ion); border-color:var(--ion); color:#06202B; font-weight:600}
+.pg-batt .chip:disabled{opacity:.28; cursor:not-allowed}
+.pg-batt .chip.go[aria-pressed=true]{background:var(--ok); border-color:var(--ok); color:#052B1D}
+.pg-batt .dock input[type=range]{width:112px}
+.pg-batt input[type=range]{-webkit-appearance:none; appearance:none; background:transparent; height:16px; margin:0}
+.pg-batt input[type=range]::-webkit-slider-runnable-track{height:2px; background:var(--edge2)}
+.pg-batt input[type=range]::-moz-range-track{height:2px; background:var(--edge2)}
+.pg-batt input[type=range]::-webkit-slider-thumb{-webkit-appearance:none; width:13px; height:13px; border-radius:50%; background:var(--copper); margin-top:-5.5px; cursor:pointer}
+.pg-batt input[type=range]::-moz-range-thumb{width:13px; height:13px; border:0; border-radius:50%; background:var(--copper); cursor:pointer}
+.pg-batt input[type=range]:focus-visible{outline:2px solid var(--ion); outline-offset:3px}
+.pg-batt section{padding:72px 0; border-bottom:1px solid var(--edge)}
+.pg-batt section:last-of-type{border-bottom:0}
+.pg-batt .reveal{opacity:0; transform:translateY(22px); transition:opacity .7s ease, transform .7s cubic-bezier(.2,.8,.25,1)}
+.pg-batt .reveal.in{opacity:1; transform:none}
+@media (prefers-reduced-motion: reduce){
+  .pg-batt .reveal{opacity:1; transform:none; transition:none}
+}
+.pg-batt .hero{padding:46px 0 60px}
+.pg-batt .hero h1{font-size:clamp(38px,6.4vw,78px)}
+.pg-batt .hero h1 em{font-style:normal; color:var(--ion)}
+.pg-batt .hero .lede{margin-top:20px}
+.pg-batt .cellstage{margin:34px 0 0; border:1px solid var(--edge); border-radius:4px; background:var(--carbon); overflow:hidden}
+.pg-batt #cell{display:block; width:100%; height:auto}
+.pg-batt .stateline{
+  display:flex; flex-wrap:wrap; gap:1px; background:var(--edge); border-top:1px solid var(--edge);
+}
+.pg-batt .st{flex:1 1 116px; background:var(--carbon); padding:10px 13px}
+.pg-batt .st .l{font-family:var(--mono); font-size:9.5px; letter-spacing:.16em; text-transform:uppercase; color:var(--mut2)}
+.pg-batt .st .v{font-family:var(--mono); font-size:20px; font-weight:700; margin-top:1px}
+.pg-batt .st .s{font-size:11px; color:var(--mut2)}
+.pg-batt .warn{
+  display:none; margin-top:14px; padding:11px 15px; border-radius:3px; font-size:13.5px;
+  border-left:3px solid var(--electro); background:rgba(232,184,75,.07); color:#F2DDA8;
+}
+.pg-batt .warn.on{display:block}
+.pg-batt .cols{display:grid; grid-template-columns:1fr 1fr; gap:26px; margin-top:30px}
+@media(max-width:860px){
+  .pg-batt .cols{grid-template-columns:1fr}
+}
+.pg-batt .card{border:1px solid var(--edge); border-radius:4px; background:var(--carbon); padding:16px 18px 18px}
+.pg-batt .card h3{font-size:14px; letter-spacing:.02em; margin-bottom:3px}
+.pg-batt .card .cs{font-size:12.5px; color:var(--mut2); margin-bottom:12px}
+.pg-batt canvas{display:block; width:100%}
+.pg-batt .phases{display:grid; grid-template-columns:repeat(3,1fr); gap:1px; background:var(--edge); border:1px solid var(--edge); border-radius:4px; margin-top:24px; overflow:hidden}
+@media(max-width:760px){
+  .pg-batt .phases{grid-template-columns:1fr}
+}
+.pg-batt .ph{background:var(--carbon); padding:15px 17px; transition:background .3s}
+.pg-batt .ph.act{background:var(--carbon2)}
+.pg-batt .ph .pn{font-family:var(--mono); font-size:10px; letter-spacing:.2em; color:var(--mut2)}
+.pg-batt .ph.act .pn{color:var(--ion)}
+.pg-batt .ph h3{font-size:15px; margin:5px 0 6px}
+.pg-batt .ph p{margin:0; font-size:13px; color:var(--mut)}
+.pg-batt .scale{display:grid; grid-template-columns:auto auto auto; gap:20px; align-items:center; margin-top:26px}
+@media(max-width:760px){
+  .pg-batt .scale{grid-template-columns:1fr; justify-items:start}
+}
+.pg-batt .scaleitem{text-align:center}
+.pg-batt .scaleitem .cap{font-family:var(--mono); font-size:10px; letter-spacing:.16em; text-transform:uppercase; color:var(--mut2); margin-top:7px}
+.pg-batt .scaleitem .big{font-family:var(--mono); font-size:17px; font-weight:700; color:var(--txt)}
+.pg-batt .arrow{font-family:var(--mono); color:var(--edge2); font-size:22px; text-align:center}
+.pg-batt .bars{margin-top:24px; display:grid; gap:9px}
+.pg-batt .barrow{display:grid; grid-template-columns:150px 1fr 78px; gap:12px; align-items:center; font-size:13px}
+@media(max-width:640px){
+  .pg-batt .barrow{grid-template-columns:110px 1fr 66px; gap:8px; font-size:12px}
+}
+.pg-batt .barrow .bl{color:var(--mut)}
+.pg-batt .barrow.cur .bl{color:var(--txt); font-weight:600}
+.pg-batt .bt{height:22px; background:var(--carbon2); border-radius:2px; overflow:hidden}
+.pg-batt .bt i{display:block; height:100%; background:linear-gradient(90deg,#2E6C86,var(--ion)); transition:width .55s cubic-bezier(.2,.8,.25,1)}
+.pg-batt .barrow.cur .bt i{background:linear-gradient(90deg,var(--copper),var(--electro))}
+.pg-batt .barrow .bv{font-family:var(--mono); font-size:12.5px; text-align:right; color:var(--mut)}
+.pg-batt .barrow.cur .bv{color:var(--electro); font-weight:700}
+.pg-batt .barnote{font-size:12.5px; color:var(--mut2); margin-top:12px}
+.pg-batt .thermrow{display:grid; grid-template-columns:76px 1fr; gap:22px; align-items:stretch}
+.pg-batt footer{padding:40px 0 64px; font-family:var(--mono); font-size:11px; color:var(--mut2); line-height:1.9}
+.pg-batt a{color:var(--ion)}
 
-/* ── bays ──────────────────────────────────────────────── */
-.bays{display:grid; grid-template-columns:repeat(5,1fr); gap:1px; background:var(--rail)}
-@media(max-width:900px){ .bays{grid-template-columns:repeat(2,1fr)} }
-.bay{background:var(--steel); padding:8px 9px; min-height:86px; border-top:2px solid var(--rail2)}
-.bay.dc{border-top-color:var(--grid)}
-.bay.ac{border-top-color:var(--ev)}
-.bay .bh{display:flex; justify-content:space-between; align-items:baseline}
-.bay .bid{font-family:var(--disp); font-size:12px; letter-spacing:.14em; color:var(--mut)}
-.bay .bkw{font-family:var(--mono); font-size:12px; color:var(--mut2)}
-.bay .bcar{font-size:11.5px; margin-top:4px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
-.bay .bfree{font-family:var(--disp); font-size:12px; letter-spacing:.14em; color:var(--mut2); margin-top:6px}
-.socbar{height:5px; background:#16222E; border-radius:1px; margin-top:6px; overflow:hidden}
-.socbar i{display:block; height:100%; background:var(--ev); transition:width .3s}
-.bay .bstat{display:flex; justify-content:space-between; font-family:var(--mono); font-size:10.5px; color:var(--mut); margin-top:4px}
-
-/* ── charts + log ──────────────────────────────────────── */
-.lower{display:grid; grid-template-columns:minmax(0,1.55fr) minmax(0,1fr); gap:12px; margin-top:12px}
-@media(max-width:1080px){ .lower{grid-template-columns:minmax(0,1fr)} }
-canvas{display:block; width:100%}
-.legend{display:flex; flex-wrap:wrap; gap:12px; padding:8px 12px; border-top:1px solid var(--rail)}
-.legend span{display:flex; align-items:center; gap:5px; font-family:var(--disp); font-size:11px; letter-spacing:.12em; text-transform:uppercase; color:var(--mut)}
-.legend i{width:9px; height:9px; border-radius:1px; display:block}
-#log{height:214px; overflow-y:auto; padding:6px 0; font-family:var(--mono); font-size:11px}
-#log div{padding:2px 12px; display:flex; gap:9px; border-bottom:1px solid #101A24}
-#log time{color:var(--mut2); flex:none}
-#log b{font-weight:500}
-.spec{padding:10px 12px; font-family:var(--mono); font-size:11px; color:var(--mut); line-height:1.7}
-.spec b{color:var(--txt); font-weight:500}
-.spec .row{display:flex; justify-content:space-between; gap:10px; border-bottom:1px dotted #182533; padding:1px 0}
-footer{margin-top:16px; font-family:var(--mono); font-size:10.5px; color:var(--mut2); line-height:1.7}
 </style>
+</head>
+<body>
+<noscript>
+  <div style="max-width:640px;margin:14vh auto;padding:0 24px;font-family:system-ui,sans-serif;color:#D8E3ED">
+    <h1 style="font-size:22px;margin:0 0 10px">This page needs JavaScript</h1>
+    <p style="color:#7E8FA0;line-height:1.6;margin:0">
+      Both pages here are live simulations — a charging plaza running on wind and solar, and an
+      animated model of a battery pack charging. Turn JavaScript on for this site and reload.
+    </p>
+  </div>
+</noscript>
+<nav class="sitenav">
+  <div class="navin">
+    <span class="mark"><b>EV</b> Charging Lab</span>
+    <div class="tabs">
+      <a href="#plaza"   data-page="plaza"><i>01</i>The plaza</a>
+      <a href="#battery" data-page="battery"><i>02</i>Inside the charge</a>
+    </div>
+  </div>
+</nav>
 
+<div class="pg pg-plaza" data-page="plaza">
 <div class="shell">
 
 <header class="bar">
@@ -403,8 +604,9 @@ footer{margin-top:16px; font-family:var(--mono); font-size:10.5px; color:var(--m
 
 <div class="lower">
   <div class="panel">
-    <div class="head"><h2>Power balance · 24 h</h2><span class="tag">kW</span></div>
-    <canvas id="chart" height="440"></canvas>
+    <div class="head"><h2>Power balance · 24 h</h2><span class="tag">kW</span>
+      <button class="btn tiny" id="expandBtn" aria-label="Open the chart in spotlight view">Expand</button></div>
+    <canvas id="chart" height="440" title="Click to expand"></canvas>
     <div class="legend">
       <span><i style="background:var(--wind)"></i>Wind</span>
       <span><i style="background:var(--solar)"></i>Solar</span>
@@ -425,7 +627,252 @@ footer{margin-top:16px; font-family:var(--mono); font-size:10.5px; color:var(--m
 </footer>
 </div>
 
+<div class="spot" id="spot" role="dialog" aria-modal="true" aria-label="Power balance, spotlight view">
+  <div class="sphead">
+    <h2 class="nameplate">Power balance · 24 h</h2>
+    <span class="spnote" id="spNote">Move across the plot to inspect any minute of the day</span>
+    <button class="btn" id="spClose">Close · Esc</button>
+  </div>
+  <div class="spbody">
+    <div id="bigWrap"><canvas id="chartBig"></canvas></div>
+    <div class="legend">
+      <span><i style="background:var(--wind)"></i>Wind</span>
+      <span><i style="background:var(--solar)"></i>Solar</span>
+      <span><i style="background:var(--store)"></i>BESS discharge</span>
+      <span><i style="background:var(--grid)"></i>Grid import</span>
+      <span><i style="background:#fff"></i>Site load</span>
+      <span><i style="background:var(--ev)"></i>State of charge</span>
+    </div>
+  </div>
+</div>
+</div>
+
+<div class="pg pg-batt" data-page="battery">
+<div class="dock">
+  <div class="dockin">
+    <div class="grp" role="group" aria-label="Vehicle">
+      <span class="gl">Vehicle</span>
+      <button class="chip" data-veh="compact" aria-pressed="false">Compact car</button>
+      <button class="chip" data-veh="car" aria-pressed="true">Long-range car</button>
+      <button class="chip" data-veh="truck" aria-pressed="false">Class 8 truck</button>
+    </div>
+    <div class="grp" role="group" aria-label="Charger" id="chgGrp"><span class="gl">Charger</span></div>
+    <div class="grp">
+      <span class="gl">Ambient</span>
+      <input type="range" id="amb" min="-15" max="45" step="1" value="22" aria-label="Ambient temperature">
+      <span class="num" id="ambV" style="font-size:12px; width:44px">22 °C</span>
+    </div>
+    <div class="grp" role="group" aria-label="Playback speed">
+      <span class="gl">Speed</span>
+      <button class="chip" data-sp="1"   aria-pressed="false" title="Real time">1&times;</button>
+      <button class="chip" data-sp="10"  aria-pressed="true"  title="Ten seconds of charging per second">10&times;</button>
+      <button class="chip" data-sp="30"  aria-pressed="false">30&times;</button>
+      <button class="chip" data-sp="120" aria-pressed="false" title="For AC charges, which take hours">120&times;</button>
+    </div>
+    <div class="grp">
+      <button class="chip" id="precon" aria-pressed="false" title="Warm the pack to 25 °C before plugging in">Precondition</button>
+      <button class="chip go" id="run" aria-pressed="true">Pause</button>
+      <button class="chip" id="reset">Reset</button>
+    </div>
+  </div>
+</div>
+
+<div class="wrap">
+
+<!-- ══════ HERO ══════ -->
+<section class="hero">
+  <span class="eyebrow">Lithium-ion · charge cycle</span>
+  <h1>Charging isn't pouring fuel.<br>It's <em>parking ions</em>,<br>one site at a time.</h1>
+  <p class="lede">A battery fills the way a car park fills. Early on, any space will do and the queue moves fast. Near the end, the driver circles for a spot — and no amount of charger power makes an empty space appear. That single fact explains almost everything about EV charging.</p>
+
+  <div class="cellstage">
+    <svg id="cell" viewBox="0 0 1000 470" role="img" aria-label="Animated cross-section of a lithium-ion cell during charging">
+      <defs>
+        <linearGradient id="cu" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="#E09A63"/><stop offset="1" stop-color="#A05C31"/>
+        </linearGradient>
+        <linearGradient id="al" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="#BAC7D2"/><stop offset="1" stop-color="#7C8B98"/>
+        </linearGradient>
+        <linearGradient id="elec" x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0" stop-color="#E8B84B" stop-opacity=".16"/>
+          <stop offset=".5" stop-color="#E8B84B" stop-opacity=".07"/>
+          <stop offset="1" stop-color="#E8B84B" stop-opacity=".16"/>
+        </linearGradient>
+        <radialGradient id="ionG"><stop offset="0" stop-color="#DFF6FF"/><stop offset="1" stop-color="#6FD8FF"/></radialGradient>
+      </defs>
+
+      <!-- external circuit -->
+      <rect x="428" y="26" width="150" height="52" rx="4" fill="#232A33" stroke="#3B444F"/>
+      <text x="503" y="49" text-anchor="middle" font-family="Space Mono, monospace" font-size="11" fill="#98A2AE" letter-spacing="1.5">CHARGER</text>
+      <text x="503" y="67" text-anchor="middle" font-family="Space Mono, monospace" font-size="14" font-weight="700" fill="#6FD8FF" id="cPower">0 kW</text>
+      <path id="wireL" d="M428 52 H105 V172" fill="none" stroke="#3B444F" stroke-width="3"/>
+      <path id="wireR" d="M578 52 H840 V172" fill="none" stroke="#3B444F" stroke-width="3"/>
+      <path id="eFlow" d="M840 172 V52 H105 V172" fill="none" stroke="#6FD8FF" stroke-width="2.4" stroke-dasharray="7 13" opacity=".85"/>
+      <text x="700" y="42" font-family="Space Mono, monospace" font-size="12" fill="#6FD8FF">e⁻ ←</text>
+      <text x="250" y="42" font-family="Space Mono, monospace" font-size="12" fill="#6FD8FF">← e⁻</text>
+
+      <!-- collectors + electrodes -->
+      <rect x="90"  y="172" width="30"  height="250" fill="url(#cu)"/>
+      <rect x="820" y="172" width="30"  height="250" fill="url(#al)"/>
+      <rect x="120" y="172" width="300" height="250" fill="#1B1F25" stroke="#2C333D"/>
+      <rect x="510" y="172" width="310" height="250" fill="#1F2530" stroke="#2C333D"/>
+      <rect x="420" y="172" width="90"  height="250" fill="url(#elec)"/>
+      <rect x="462" y="172" width="6"   height="250" fill="#4A5560"/>
+      <g id="anodeSites"></g>
+      <g id="cathodeSites"></g>
+      <g id="ions"></g>
+      <rect x="120" y="172" width="300" height="250" fill="none" stroke="#2C333D"/>
+      <rect x="510" y="172" width="310" height="250" fill="none" stroke="#2C333D"/>
+
+      <!-- labels -->
+      <text x="105" y="443" text-anchor="middle" font-family="Space Mono, monospace" font-size="9.5" fill="#C97A45" letter-spacing="1">Cu</text>
+      <text x="270" y="443" text-anchor="middle" font-family="Space Mono, monospace" font-size="10.5" fill="#98A2AE" letter-spacing="1.6">GRAPHITE ANODE</text>
+      <text x="270" y="459" text-anchor="middle" font-family="Space Mono, monospace" font-size="10" fill="#6FD8FF" id="anodeFill">0% of sites full</text>
+      <text x="465" y="443" text-anchor="middle" font-family="Space Mono, monospace" font-size="10.5" fill="#E8B84B" letter-spacing="1.6">ELECTROLYTE</text>
+      <text x="465" y="459" text-anchor="middle" font-family="Space Mono, monospace" font-size="10" fill="#8A7433">+ separator</text>
+      <text x="665" y="443" text-anchor="middle" font-family="Space Mono, monospace" font-size="10.5" fill="#98A2AE" letter-spacing="1.6">NMC CATHODE</text>
+      <text x="665" y="459" text-anchor="middle" font-family="Space Mono, monospace" font-size="10" fill="#98A2AE" id="cathodeFill">100% of Li remaining</text>
+      <text x="835" y="443" text-anchor="middle" font-family="Space Mono, monospace" font-size="9.5" fill="#9AA9B6" letter-spacing="1">Al</text>
+      <text x="270" y="160" text-anchor="middle" font-family="Space Mono, monospace" font-size="10" fill="#616D7A">Li⁺ arrives and slots into the lattice</text>
+      <text x="665" y="160" text-anchor="middle" font-family="Space Mono, monospace" font-size="10" fill="#616D7A">Li⁺ leaves the cathode</text>
+    </svg>
+
+    <div class="stateline">
+      <div class="st"><div class="l">State of charge</div><div class="v" id="mSoc" style="color:var(--ion)">10%</div><div class="s" id="mSocS">7.7 kWh in pack</div></div>
+      <div class="st"><div class="l">Charge power</div><div class="v" id="mKw">0</div><div class="s" id="mKwS">kW at the plug</div></div>
+      <div class="st"><div class="l">Pack current</div><div class="v" id="mAmp">0</div><div class="s" id="mAmpS">A at 697 V</div></div>
+      <div class="st"><div class="l">Pack temp</div><div class="v" id="mTemp" style="color:var(--electro)">22</div><div class="s" id="mTempS">°C · no derate</div></div>
+      <div class="st"><div class="l">Elapsed</div><div class="v" id="mMin">0:00</div><div class="s" id="mMinS">since plug-in</div></div>
+      <div class="st"><div class="l">To 80%</div><div class="v" id="mEta" style="color:var(--ok)">—</div><div class="s" id="mEtaS">minutes remaining</div></div>
+    </div>
+  </div>
+  <div class="warn" id="warnBox"></div>
+</section>
+
+<!-- ══════ CURVE ══════ -->
+<section class="reveal">
+  <span class="eyebrow">The shape of a charge</span>
+  <h2 style="font-size:clamp(26px,3.6vw,40px)">Power is not a number.<br>It's a curve that falls away under you.</h2>
+  <p class="lede" style="margin-top:16px">A charger advertises its ceiling. The battery decides what it will actually accept, and that decision changes every second as the anode fills. The grey envelope is what the pack will take; the coloured area is what you actually get.</p>
+
+  <div class="cols">
+    <div class="card">
+      <h3>Accepted power against state of charge</h3>
+      <div class="cs">Charger ceiling vs. what the pack allows</div>
+      <canvas id="curveP" height="520"></canvas>
+    </div>
+    <div class="card">
+      <h3>State of charge against time</h3>
+      <div class="cs">The knee is where the queue starts backing up</div>
+      <canvas id="curveT" height="520"></canvas>
+    </div>
+  </div>
+
+  <div class="phases">
+    <div class="ph" id="ph1">
+      <div class="pn">PHASE 01 · CONSTANT CURRENT</div>
+      <h3>Push as hard as it will take</h3>
+      <p>Empty lattice, low resistance, plenty of free sites. Current is capped only by the charger, the cable, or the pack's own limit. This is the part that fits on a billboard.</p>
+    </div>
+    <div class="ph" id="ph2">
+      <div class="pn">PHASE 02 · TAPER</div>
+      <h3>Cell voltage hits its ceiling</h3>
+      <p>Each cell approaches roughly 4.2 V. To avoid going past it, the charger holds voltage steady and lets current fall. Power drops even though the charger has plenty in reserve.</p>
+    </div>
+    <div class="ph" id="ph3">
+      <div class="pn">PHASE 03 · CONSTANT VOLTAGE</div>
+      <h3>The long crawl to full</h3>
+      <p>Free sites are scarce. Push too hard now and lithium plates as metal on the anode surface instead of slotting in — permanent capacity loss. So the current trickles, and the last 20% can take as long as the first 70%.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ══════ PACK ══════ -->
+<section class="reveal">
+  <span class="eyebrow">Cell → module → pack</span>
+  <h2 style="font-size:clamp(26px,3.6vw,40px)">A truck is not a big car battery.<br>It's a great many car battery cells.</h2>
+  <p class="lede" style="margin-top:16px">Every cell in the pack is doing the same thing at the same time. Scale is just repetition — which is why a truck needs a megawatt to charge in the same minutes a car needs 350 kW.</p>
+
+  <div class="scale">
+    <div class="scaleitem">
+      <svg width="58" height="92" viewBox="0 0 58 92" aria-hidden="true">
+        <rect x="9" y="8" width="40" height="80" rx="3" fill="#1F2530" stroke="#3B444F"/>
+        <rect x="22" y="3" width="14" height="7" rx="2" fill="#9AA9B6"/>
+        <rect id="oneCell" x="12" y="60" width="34" height="25" rx="2" fill="#6FD8FF" opacity=".75"/>
+      </svg>
+      <div class="big">1 cell</div>
+      <div class="cap" id="cellSpec">3.7 V · 111 Ah</div>
+    </div>
+    <div class="arrow">→</div>
+    <div class="scaleitem">
+      <canvas id="modCv" width="230" height="92" style="width:230px;height:92px"></canvas>
+      <div class="big" id="modN">12 cells</div>
+      <div class="cap">one module</div>
+    </div>
+    <div class="arrow">→</div>
+    <div class="scaleitem" style="grid-column:1/-1; justify-self:stretch">
+      <canvas id="packCv" height="380"></canvas>
+      <div class="big" id="packN">384 cells</div>
+      <div class="cap" id="packCap">77.4 kWh · 697 V nominal</div>
+    </div>
+  </div>
+  <p class="barnote" id="balNote">Every cell shown is filling in real time. Small differences between cells are normal — the battery management system evens them out near the top of the charge, which is another reason the last few percent are slow.</p>
+</section>
+
+<!-- ══════ HEAT ══════ -->
+<section class="reveal">
+  <span class="eyebrow">Thermal limits</span>
+  <h2 style="font-size:clamp(26px,3.6vw,40px)">Cold batteries won't take it.<br>Hot batteries aren't allowed to.</h2>
+  <p class="lede" style="margin-top:16px">Below about 10 °C the electrolyte is sluggish and ions move too slowly to be forced in safely, so the pack throttles itself hard. Above about 40 °C, degradation accelerates and it throttles again. Fast charging sits in a narrow window — and generates the very heat that threatens it.</p>
+
+  <div class="cols">
+    <div class="card">
+      <h3>Pack temperature</h3>
+      <div class="cs" id="thermCs">Rising from resistive heating, held by the cooling loop</div>
+      <div class="thermrow">
+        <svg viewBox="0 0 60 260" style="height:220px" aria-hidden="true">
+          <rect x="20" y="10" width="20" height="210" rx="10" fill="#1B1F25" stroke="#3B444F"/>
+          <rect id="thBar" x="23" y="130" width="14" height="87" rx="7" fill="var(--electro)"/>
+          <circle cx="30" cy="232" r="16" fill="#1B1F25" stroke="#3B444F"/>
+          <circle id="thBulb" cx="30" cy="232" r="11" fill="var(--electro)"/>
+          <line x1="42" y1="45" x2="52" y2="45" stroke="#3B444F"/><text x="56" y="49" font-family="Space Mono,monospace" font-size="9" fill="#616D7A">50</text>
+          <line x1="42" y1="115" x2="52" y2="115" stroke="#3B444F"/><text x="56" y="119" font-family="Space Mono,monospace" font-size="9" fill="#616D7A">25</text>
+          <line x1="42" y1="185" x2="52" y2="185" stroke="#3B444F"/><text x="56" y="189" font-family="Space Mono,monospace" font-size="9" fill="#616D7A">0</text>
+        </svg>
+        <canvas id="thermCv" height="440"></canvas>
+      </div>
+    </div>
+    <div class="card">
+      <h3>What the temperature is costing you</h3>
+      <div class="cs">Power the pack is refusing right now, and why</div>
+      <div id="derateBox" style="margin-top:6px"></div>
+      <p style="font-size:13.5px; color:var(--mut); margin:16px 0 0">
+        This is what preconditioning buys. Cars that know you are navigating to a charger will spend energy warming the pack on the way, so it arrives in the window instead of spending the first fifteen minutes getting there. Try the ambient slider at &minus;10 °C with preconditioning off, then on.
+      </p>
+    </div>
+  </div>
+</section>
+
+<!-- ══════ TIME ══════ -->
+<section class="reveal">
+  <span class="eyebrow">10% → 80%</span>
+  <h2 style="font-size:clamp(26px,3.6vw,40px)">How long it actually takes</h2>
+  <p class="lede" style="margin-top:16px">Simulated for the selected vehicle at the current pack temperature, using the same model driving everything above. The highlighted row is the charger you have chosen.</p>
+  <div class="bars" id="bars"></div>
+  <p class="barnote" id="timeNote"></p>
+</section>
+
+<footer>
+  <div>Educational simulation. The charge acceptance envelope is a piecewise model of constant-current / constant-voltage behaviour, not a manufacturer curve. Thermal response uses a lumped-mass model with I²R heating and a temperature-dependent cooling coefficient. Vehicle figures are representative of their class and are not quoted from any specific product.</div>
+  <div style="margin-top:10px">Cell chemistry shown is graphite / NMC, the most common traction chemistry. LFP packs behave differently: flatter voltage, more tolerant of 100% charging, worse in cold.</div>
+</footer>
+</div>
+</div>
+
 <script>
+/* ══════ page: charging plaza ══════ */
+(function(){
 "use strict";
 const $ = s => document.querySelector(s);
 const SVGNS = "http://www.w3.org/2000/svg";
@@ -930,58 +1377,153 @@ function paintPanels(){
 }
 
 /* ══════════ CHART ══════════ */
-function drawChart(){
-  const cv = $("#chart"), dpr = Math.min(2, devicePixelRatio||1);
-  const W = cv.clientWidth, H = 220;
-  if(cv.width !== W*dpr || cv.height !== H*dpr){ cv.width=W*dpr; cv.height=H*dpr; cv.style.height=H+"px"; }
-  const g = cv.getContext("2d"); g.setTransform(dpr,0,0,dpr,0,0); g.clearRect(0,0,W,H);
-  const L=44, R=38, Tp=12, B=22, pw=W-L-R, ph=H-Tp-B;
+let spotOpen = false, hoverX = null;
+const SERIES = [
+  {k:"w",   label:"Wind",           col:"#57D3E8", fill:"rgba(87,211,232,.55)"},
+  {k:"s",   label:"Solar",          col:"#FFB020", fill:"rgba(255,176,32,.55)"},
+  {k:"b",   label:"BESS discharge", col:"#9D7BFF", fill:"rgba(157,123,255,.5)"},
+  {k:"g",   label:"Grid import",    col:"#FF7A6B", fill:"rgba(255,122,107,.5)"}
+];
+
+function paintChart(cv, H, allowHover){
+  const dpr = Math.min(2, devicePixelRatio||1), W = cv.clientWidth;
+  if(!W || H < 40) return;
+  if(cv.width !== Math.round(W*dpr) || cv.height !== Math.round(H*dpr)){
+    cv.width = Math.round(W*dpr); cv.height = Math.round(H*dpr); cv.style.height = H+"px";
+  }
+  const g = cv.getContext("2d");
+  g.setTransform(dpr,0,0,dpr,0,0); g.clearRect(0,0,W,H);
+
+  const big = H > 300, fs = big?12:10;
+  const L = big?62:44, R = big?56:38, Tp = big?20:12, B = big?32:22;
+  const pw = W-L-R, ph = H-Tp-B;
+  if(pw < 60 || ph < 30) return;
+  g.font = fs+"px 'IBM Plex Mono',monospace";
 
   let peak = 200;
   for(const d of S.series) peak = Math.max(peak, d.w+d.s+d.b+d.g, d.l);
   peak = Math.ceil(peak/100)*100;
 
-  g.strokeStyle="#16222E"; g.fillStyle="#4C5F72"; g.font="10px 'IBM Plex Mono',monospace";
-  for(let i=0;i<=4;i++){
-    const y = Tp+ph-ph*i/4;
-    g.beginPath(); g.moveTo(L,y); g.lineTo(L+pw,y); g.stroke();
-    g.textAlign="right"; g.fillText((peak*i/4).toFixed(0), L-6, y+3);
-  }
-  for(let hh=0;hh<=24;hh+=3){
-    const x = L+pw*hh/24;
-    g.strokeStyle = (hh>=9&&hh<12)||(hh>=18&&hh<22) ? "#2A1D22" : "#16222E";
-    g.beginPath(); g.moveTo(x,Tp); g.lineTo(x,Tp+ph); g.stroke();
-    g.textAlign="center"; g.fillStyle="#4C5F72"; g.fillText(String(hh).padStart(2,"0"), x, H-7);
-  }
-  if(S.series.length<2){ g.fillStyle="#3B4B5C"; g.textAlign="center"; g.fillText("collecting data…", L+pw/2, Tp+ph/2); return; }
-
   const X = h => L+pw*h/24, Y = v => Tp+ph-ph*clamp(v/peak,0,1);
-  const band = (keys,color) => {
+
+  /* peak-tariff windows */
+  g.fillStyle = "rgba(255,122,107,.06)";
+  [[9,12],[18,22]].forEach(([a,b]) => g.fillRect(X(a), Tp, X(b)-X(a), ph));
+  if(big){
+    g.fillStyle="#5A3A38"; g.textAlign="center"; g.font=`${fs-2}px 'IBM Plex Mono',monospace`;
+    g.fillText("PEAK TARIFF", X(10.5), Tp+13); g.fillText("PEAK TARIFF", X(20), Tp+13);
+    g.font = fs+"px 'IBM Plex Mono',monospace";
+  }
+
+  const rows = big?8:4;
+  for(let i=0;i<=rows;i++){
+    const y = Tp+ph-ph*i/rows;
+    g.strokeStyle="#16222E"; g.lineWidth=1;
+    g.beginPath(); g.moveTo(L,y); g.lineTo(L+pw,y); g.stroke();
+    g.fillStyle="#4C5F72"; g.textAlign="right";
+    g.fillText((peak*i/rows).toFixed(0), L-7, y+fs*0.34);
+  }
+  for(let hh=0; hh<=24; hh += big?1:3){
+    const x = X(hh);
+    g.strokeStyle="#16222E"; g.beginPath(); g.moveTo(x,Tp); g.lineTo(x,Tp+ph); g.stroke();
+    g.fillStyle="#4C5F72"; g.textAlign="center";
+    g.fillText(String(hh).padStart(2,"0"), x, Tp+ph+fs+7);
+  }
+  if(big){
+    g.save(); g.translate(16, Tp+ph/2); g.rotate(-Math.PI/2);
+    g.fillStyle="#4C5F72"; g.textAlign="center"; g.fillText("kW", 0, 0); g.restore();
+  }
+
+  if(S.series.length < 2){
+    g.fillStyle="#3B4B5C"; g.textAlign="center";
+    g.fillText("collecting data…", L+pw/2, Tp+ph/2);
+    return;
+  }
+
+  /* stacked generation bands */
+  SERIES.forEach((sv, idx) => {
+    const keys = SERIES.slice(0, idx+1).map(x=>x.k);
     g.beginPath();
-    S.series.forEach((d,i)=>{ const tot=keys.reduce((a,k)=>a+d[k],0); i?g.lineTo(X(d.h),Y(tot)):g.moveTo(X(d.h),Y(tot)); });
+    S.series.forEach((d,i) => {
+      const tot = keys.reduce((a,k)=>a+d[k],0);
+      i ? g.lineTo(X(d.h),Y(tot)) : g.moveTo(X(d.h),Y(tot));
+    });
     for(let i=S.series.length-1;i>=0;i--){
-      const d=S.series[i], base=keys.slice(0,-1).reduce((a,k)=>a+d[k],0);
-      g.lineTo(X(d.h),Y(base));
+      const d = S.series[i], base = keys.slice(0,-1).reduce((a,k)=>a+d[k],0);
+      g.lineTo(X(d.h), Y(base));
     }
-    g.closePath(); g.fillStyle=color; g.fill();
-  };
-  band(["w"],"rgba(87,211,232,.55)");
-  band(["w","s"],"rgba(255,176,32,.55)");
-  band(["w","s","b"],"rgba(157,123,255,.5)");
-  band(["w","s","b","g"],"rgba(255,122,107,.5)");
+    g.closePath(); g.fillStyle = sv.fill; g.fill();
+  });
 
   g.beginPath(); S.series.forEach((d,i)=> i?g.lineTo(X(d.h),Y(d.l)):g.moveTo(X(d.h),Y(d.l)));
-  g.strokeStyle="#fff"; g.lineWidth=1.6; g.stroke();
+  g.strokeStyle="#fff"; g.lineWidth = big?2:1.6; g.stroke();
 
   g.beginPath(); S.series.forEach((d,i)=>{ const y=Tp+ph-ph*d.soc; i?g.lineTo(X(d.h),y):g.moveTo(X(d.h),y); });
-  g.strokeStyle="#45E0A0"; g.lineWidth=1.2; g.setLineDash([4,4]); g.stroke(); g.setLineDash([]);
-  g.fillStyle="#45E0A0"; g.textAlign="left"; g.font="10px 'IBM Plex Mono',monospace";
-  for(let i=0;i<=4;i++) g.fillText((i*25)+"%", L+pw+6, Tp+ph-ph*i/4+3);
+  g.strokeStyle="#45E0A0"; g.lineWidth = big?1.8:1.2; g.setLineDash([5,5]); g.stroke(); g.setLineDash([]);
+  g.fillStyle="#45E0A0"; g.textAlign="left";
+  for(let i=0;i<=4;i++) g.fillText((i*25)+"%", L+pw+7, Tp+ph-ph*i/4+fs*0.34);
+
+  /* now-marker */
+  const nowX = X(hourOf());
+  g.strokeStyle="rgba(255,255,255,.28)"; g.setLineDash([2,4]);
+  g.beginPath(); g.moveTo(nowX,Tp); g.lineTo(nowX,Tp+ph); g.stroke(); g.setLineDash([]);
+
+  /* ── hover inspector (spotlight only) ── */
+  if(!allowHover || hoverX == null) return;
+  const hx = clamp(hoverX, L, L+pw), th = (hx-L)/pw*24;
+  let d = null, best = 1e9;
+  for(const p of S.series){ const dd = Math.abs(p.h-th); if(dd < best){ best = dd; d = p; } }
+  if(!d) return;
+
+  const px = X(d.h);
+  g.strokeStyle="#8FA6B8"; g.lineWidth=1;
+  g.beginPath(); g.moveTo(px,Tp); g.lineTo(px,Tp+ph); g.stroke();
+
+  const gen = d.w+d.s+d.b+d.g;
+  const rowsT = [
+    ...SERIES.map(sv => [sv.label, d[sv.k].toFixed(0)+" kW", sv.col]),
+    ["Site load", d.l.toFixed(0)+" kW", "#FFFFFF"],
+    ["State of charge", (d.soc*100).toFixed(0)+" %", "#45E0A0"],
+    ["Renewable now", gen>0 ? (100*(1-d.g/Math.max(gen,.01))).toFixed(0)+" %" : "—", "#8FA6B8"]
+  ];
+  const bw = 214, bh = 26 + rowsT.length*19;
+  let bx = px + 14, by = Tp + 14;
+  if(bx + bw > L+pw) bx = px - bw - 14;
+  by = clamp(by, Tp, Tp+ph-bh);
+
+  g.fillStyle="rgba(10,16,23,.96)"; g.strokeStyle="#2A3D50";
+  g.beginPath(); g.rect(bx,by,bw,bh); g.fill(); g.stroke();
+  g.fillStyle="#D8E3ED"; g.textAlign="left"; g.font=`600 ${fs}px 'IBM Plex Mono',monospace`;
+  const hhh = String(Math.floor(d.h)).padStart(2,"0"), mmm = String(Math.round((d.h%1)*60)).padStart(2,"0");
+  g.fillText(`${hhh}:${mmm}`, bx+11, by+18);
+  g.font = fs+"px 'IBM Plex Mono',monospace";
+  rowsT.forEach(([lab,val,col],i) => {
+    const y = by + 38 + i*19;
+    g.fillStyle = col; g.fillRect(bx+11, y-7, 7, 7);
+    g.fillStyle = "#8FA6B8"; g.textAlign="left";  g.fillText(lab, bx+25, y);
+    g.fillStyle = col;       g.textAlign="right"; g.fillText(val, bx+bw-11, y);
+  });
+}
+
+function drawChart(){
+  paintChart($("#chart"), 220, false);
+  if(spotOpen) paintChart($("#chartBig"), $("#bigWrap").clientHeight, true);
+}
+
+/* ── spotlight ── */
+function openSpot(){
+  spotOpen = true; $("#spot").classList.add("on");
+  requestAnimationFrame(() => { drawChart(); $("#spClose").focus(); });
+}
+function closeSpot(){
+  spotOpen = false; hoverX = null;
+  $("#spot").classList.remove("on"); $("#expandBtn").focus();
 }
 
 /* ══════════ LOOP ══════════ */
 let last = performance.now(), acc = 0;
 function frame(now){
+  if(document.documentElement.dataset.page !== "plaza"){ last = now; requestAnimationFrame(frame); return; }
   const rdt = Math.min(0.08, (now-last)/1000); last = now;
   if(S.run){
     acc += rdt*S.speed;
@@ -1035,8 +1577,577 @@ document.querySelectorAll("[data-preset]").forEach(b => b.onclick = () => {
   $("#arr").value=p.arr; $("#arrV").textContent=p.arr.toFixed(1);
   log(`<b style="color:var(--solar)">Scenario</b> ${p.msg}`);
 });
+$("#expandBtn").onclick = openSpot;
+$("#chart").onclick = openSpot;
+$("#spClose").onclick = closeSpot;
+$("#spot").onclick = e => { if(e.target === $("#spot")) closeSpot(); };
+addEventListener("keydown", e => {
+  if(e.key === "Escape" && spotOpen) closeSpot();
+  else if(e.key.toLowerCase() === "f" && !spotOpen && document.documentElement.dataset.page === "plaza"
+        && !/INPUT|SELECT/.test(document.activeElement.tagName)) openSpot();
+});
+const trackHover = clientX => {
+  hoverX = clientX - $("#chartBig").getBoundingClientRect().left;
+  if(!S.run) drawChart();
+};
+$("#chartBig").addEventListener("mousemove", e => trackHover(e.clientX));
+$("#chartBig").addEventListener("mouseleave", () => { hoverX = null; if(!S.run) drawChart(); });
+$("#chartBig").addEventListener("touchmove", e => {
+  if(e.touches[0]){ trackHover(e.touches[0].clientX); e.preventDefault(); }
+}, {passive:false});
 addEventListener("resize", () => drawChart());
 
 boot();
 requestAnimationFrame(frame);
+})();
 </script>
+
+<script>
+/* ══════ page: inside the charge ══════ */
+(function(){
+"use strict";
+const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
+const clamp=(v,a,b)=>v<a?a:v>b?b:v, lerp=(a,b,t)=>a+(b-a)*t;
+
+/* ══════ VEHICLES ══════ */
+const VEH = {
+  compact:{ label:"Compact car", sub:"24 kWh city hatchback", kwh:24,   V:320, maxKW:50,   acKW:7.2,
+            cells:96,   cellV:3.7, cellAh:75,  perMod:12, R:0.140, kCool:0.115, tm:0.064, cool:"air-cooled" },
+  car:{     label:"Long-range car", sub:"77 kWh crossover", kwh:77.4, V:697, maxKW:240,  acKW:11,
+            cells:384,  cellV:3.7, cellAh:111, perMod:12, R:0.055, kCool:0.30, tm:0.135, cool:"liquid-cooled" },
+  truck:{   label:"Class 8 tractor", sub:"600 kWh line-haul truck", kwh:600, V:800, maxKW:1200, acKW:22,
+            cells:1620, cellV:3.7, cellAh:750, perMod:30, R:0.018, kCool:1.08, tm:1.00,  cool:"liquid-cooled" }
+};
+const CHG = [
+  {id:"ac7",  label:"Home AC 7.4",  kW:7.4,  ac:true},
+  {id:"ac22", label:"AC 22",        kW:22,   ac:true},
+  {id:"dc50", label:"DC 50",        kW:50},
+  {id:"dc150",label:"DC 150",       kW:150},
+  {id:"dc350",label:"CCS 350",      kW:350},
+  {id:"mcs",  label:"MCS 1.2 MW",   kW:1200, truck:true}
+];
+
+/* ══════ MODEL ══════ */
+/* fraction of peak power the pack will accept at a given state of charge */
+function taper(soc){
+  if(soc >= 1) return 0;
+  if(soc < 0.06) return 0.62 + soc/0.06*0.38;      // cold-start-of-charge ramp
+  if(soc < 0.55) return 1;                          // constant current
+  if(soc < 0.80) return 1 - (soc-0.55)/0.25*0.45;   // voltage ceiling approached
+  return 0.55*Math.exp(-(soc-0.80)/0.092);          // constant voltage crawl
+}
+/* fraction allowed by pack temperature */
+function thermalF(T){
+  if(T <= -10) return 0.08;
+  if(T < 0)    return lerp(0.08, 0.22, (T+10)/10);
+  if(T < 10)   return lerp(0.22, 0.55, T/10);
+  if(T < 25)   return lerp(0.55, 1.00, (T-10)/15);
+  if(T <= 38)  return 1;
+  if(T < 48)   return lerp(1.00, 0.42, (T-38)/10);
+  return 0.25;
+}
+const fmtWatch = sec => sec < 90 ? Math.round(sec)+" s"
+  : sec < 5400 ? Math.round(sec/60)+" min" : (sec/3600).toFixed(1)+" h";
+const chg = () => CHG.find(c => c.id === st.chg);
+const veh = () => VEH[st.veh];
+function chargerCap(){ const c = chg(), v = veh(); return c.ac ? Math.min(c.kW, v.acKW) : c.kW; }
+
+/* one integration step, dt in minutes; returns the instantaneous picture */
+function integrate(s, dtMin){
+  const v = VEH[s.veh], c = CHG.find(x=>x.id===s.chg), dtH = dtMin/60;
+  const cap = c.ac ? Math.min(c.kW, v.acKW) : c.kW;
+  const limit = v.maxKW * taper(s.soc) * thermalF(s.T);
+  const P = s.soc >= 1 ? 0 : Math.min(cap, limit);
+  const I = P*1000 / v.V;
+  const heat = I*I*v.R / 1000;                                  // resistive loss, kW
+  const heater = (P > 0 && s.T < 20) ? Math.min(0.05*v.maxKW, 90*v.tm) : 0;
+  const coolK = v.kCool * (1 + 1.4/(1+Math.exp(-(s.T-32)/2.5)));
+  const dT = (heat + heater - coolK*(s.T - s.amb)) * dtH / v.tm;
+  s.T = clamp(s.T + dT, -30, 70);
+  s.soc = clamp(s.soc + Math.max(0, P - heat - heater)*dtH / v.kwh, 0, 1);
+  s.min += dtMin;
+  s.kwh += P*dtH;
+  s.lost += (heat+heater)*dtH;
+  return {P, I, limit, cap, heat, heater};
+}
+
+/* headless run used for the comparison bars */
+function timeTo(vehId, chgId, amb, precon, from, to){
+  const s = {veh:vehId, chg:chgId, soc:from, T: precon ? Math.max(amb,25) : amb, amb, min:0, kwh:0, lost:0};
+  let guard = 0;
+  while(s.soc < to && guard++ < 60000){
+    const r = integrate(s, 0.25);
+    if(r.P <= 0.01) return null;
+  }
+  return guard >= 60000 ? null : s.min;
+}
+
+/* ══════ STATE ══════ */
+let st, ions = [], eOff = 0, tSeries = [], cellJit = [];
+function fresh(keep){
+  const amb = keep ? st.amb : 22, veh = keep ? st.veh : "car", ch = keep ? st.chg : "dc350",
+        pre = keep ? st.pre : false, run = keep ? st.run : true;
+  const sp = keep ? st.speed : 10;
+  return { veh, chg:ch, amb, pre, run, speed:sp, nextSample:0, soc:0.10, T: pre ? Math.max(amb,25) : amb,
+           min:0, kwh:0, lost:0, P:0, I:0, limit:0, heat:0, heater:0 };
+}
+
+/* ══════ CELL LATTICE ══════ */
+const NA_C = 12, NA_R = 8, N_SITES = NA_C*NA_R;
+function buildSites(){
+  const mk = (host, x0, w, col) => {
+    host.innerHTML = "";
+    const cw = w/NA_C, ch = 250/NA_R;
+    for(let r=0;r<NA_R;r++) for(let c=0;c<NA_C;c++){
+      const e = document.createElementNS("http://www.w3.org/2000/svg","rect");
+      e.setAttribute("x", (x0 + c*cw + cw*0.18).toFixed(1));
+      e.setAttribute("y", (172 + r*ch + ch*0.18).toFixed(1));
+      e.setAttribute("width",  (cw*0.64).toFixed(1));
+      e.setAttribute("height", (ch*0.64).toFixed(1));
+      e.setAttribute("rx","1.5");
+      e.setAttribute("fill", col);
+      e.setAttribute("opacity","0.12");
+      host.appendChild(e);
+    }
+  };
+  mk($("#anodeSites"),   120, 300, "#6FD8FF");
+  mk($("#cathodeSites"), 510, 310, "#6FD8FF");
+}
+function paintSites(){
+  const a = $("#anodeSites").children, c = $("#cathodeSites").children;
+  const nA = Math.round(N_SITES*st.soc), nC = Math.round(N_SITES*(1-st.soc));
+  /* anode fills bottom-up, cathode empties top-down, so they read as a transfer */
+  for(let i=0;i<N_SITES;i++){
+    const idx = N_SITES-1-i;
+    a[idx].setAttribute("opacity", i < nA ? "0.95" : "0.12");
+    a[idx].setAttribute("fill", i < nA ? "#6FD8FF" : "#6FD8FF");
+  }
+  for(let i=0;i<N_SITES;i++)
+    c[i].setAttribute("opacity", i < nC ? "0.8" : "0.08");
+  $("#anodeFill").textContent   = `${(st.soc*100).toFixed(0)}% of sites full`;
+  $("#cathodeFill").textContent = `${((1-st.soc)*100).toFixed(0)}% of Li remaining`;
+}
+
+/* ══════ IONS ══════ */
+function updateIons(rdt){
+  const load = st.P / Math.max(veh().maxKW, 1);          // 0..1
+  const want = Math.round(clamp(load,0,1) * 46);
+  const crowd = clamp((st.soc-0.75)/0.25, 0, 1);          // near-full congestion
+  while(ions.length < want && st.P > 0.5)
+    ions.push({ x: 505+Math.random()*8, y: 180+Math.random()*234,
+                v: (34+Math.random()*30)*(0.35+0.65*load), s:Math.random()*6.28 });
+  while(ions.length > want) ions.pop();
+
+  const g = $("#ions");
+  if(g.children.length !== ions.length){
+    g.innerHTML = "";
+    ions.forEach(()=>{
+      const c = document.createElementNS("http://www.w3.org/2000/svg","circle");
+      c.setAttribute("r","4.2"); c.setAttribute("fill","url(#ionG)");
+      g.appendChild(c);
+    });
+  }
+  ions.forEach((io,i)=>{
+    /* ions slow down as they approach a crowded anode surface */
+    const near = clamp((io.x-425)/80, 0, 1);
+    io.x -= io.v*rdt*(1 - crowd*0.72*(1-near));
+    io.s += rdt*3;
+    if(io.x < 424){ io.x = 505+Math.random()*8; io.y = 180+Math.random()*234; }
+    const el = g.children[i];
+    el.setAttribute("cx", io.x.toFixed(1));
+    el.setAttribute("cy", (io.y + Math.sin(io.s)*3).toFixed(1));
+    el.setAttribute("opacity", (0.5+0.5*near).toFixed(2));
+  });
+}
+
+/* ══════ CANVAS HELPERS ══════ */
+function setup(cv, H){
+  const dpr = Math.min(2, devicePixelRatio||1), W = cv.clientWidth;
+  if(!W) return null;
+  if(cv.width !== Math.round(W*dpr) || cv.height !== Math.round(H*dpr)){
+    cv.width = Math.round(W*dpr); cv.height = Math.round(H*dpr); cv.style.height = H+"px";
+  }
+  const g = cv.getContext("2d");
+  g.setTransform(dpr,0,0,dpr,0,0); g.clearRect(0,0,W,H);
+  g.font = "10px 'Space Mono', monospace";
+  return {g, W, H};
+}
+
+/* power vs SOC */
+function drawCurveP(){
+  const o = setup($("#curveP"), 260); if(!o) return;
+  const {g,W,H} = o, L=44, R=14, Tp=14, B=26, pw=W-L-R, ph=H-Tp-B;
+  const v = veh(), cap = chargerCap();
+  const ymax = Math.max(cap, v.maxKW)*1.08;
+  const X = s => L+pw*s, Y = p => Tp+ph-ph*clamp(p/ymax,0,1);
+
+  g.strokeStyle="#252B33";
+  for(let i=0;i<=4;i++){ const y=Tp+ph-ph*i/4;
+    g.beginPath(); g.moveTo(L,y); g.lineTo(L+pw,y); g.stroke();
+    g.fillStyle="#616D7A"; g.textAlign="right"; g.fillText((ymax*i/4).toFixed(0), L-6, y+3); }
+  for(let s=0;s<=1.0001;s+=0.25){
+    g.beginPath(); g.moveTo(X(s),Tp); g.lineTo(X(s),Tp+ph); g.stroke();
+    g.fillStyle="#616D7A"; g.textAlign="center"; g.fillText((s*100).toFixed(0)+"%", X(s), H-8); }
+
+  /* pack acceptance envelope at the current temperature */
+  g.beginPath(); g.moveTo(X(0), Tp+ph);
+  for(let s=0;s<=1.0001;s+=0.005) g.lineTo(X(s), Y(v.maxKW*taper(s)*thermalF(st.T)));
+  g.lineTo(X(1), Tp+ph); g.closePath();
+  g.fillStyle="rgba(154,169,182,.10)"; g.fill();
+  g.strokeStyle="#5C6874"; g.lineWidth=1.2; g.beginPath();
+  for(let s=0;s<=1.0001;s+=0.005){ const y=Y(v.maxKW*taper(s)*thermalF(st.T)); s?g.lineTo(X(s),y):g.moveTo(X(s),y); }
+  g.stroke();
+
+  /* charger ceiling */
+  g.strokeStyle="#C97A45"; g.setLineDash([5,4]); g.lineWidth=1.4;
+  g.beginPath(); g.moveTo(L,Y(cap)); g.lineTo(L+pw,Y(cap)); g.stroke(); g.setLineDash([]);
+  g.fillStyle="#C97A45"; g.textAlign="left"; g.fillText(`charger ${cap.toFixed(0)} kW`, L+6, Y(cap)-6);
+
+  /* delivered so far */
+  if(tSeries.length>1){
+    g.beginPath(); g.moveTo(X(tSeries[0].soc), Tp+ph);
+    tSeries.forEach(d=>g.lineTo(X(d.soc),Y(d.P)));
+    g.lineTo(X(tSeries[tSeries.length-1].soc), Tp+ph); g.closePath();
+    g.fillStyle="rgba(111,216,255,.24)"; g.fill();
+    g.strokeStyle="#6FD8FF"; g.lineWidth=2; g.beginPath();
+    tSeries.forEach((d,i)=> i?g.lineTo(X(d.soc),Y(d.P)):g.moveTo(X(d.soc),Y(d.P)));
+    g.stroke();
+  }
+  g.fillStyle="#6FD8FF"; g.beginPath(); g.arc(X(st.soc),Y(st.P),4.5,0,6.29); g.fill();
+  g.fillStyle="#616D7A"; g.textAlign="center"; g.fillText("state of charge", L+pw/2, Tp+ph+22);
+}
+
+/* SOC vs time */
+function drawCurveT(){
+  const o = setup($("#curveT"), 260); if(!o) return;
+  const {g,W,H} = o, L=40, R=14, Tp=14, B=26, pw=W-L-R, ph=H-Tp-B;
+  const span = Math.max(20, Math.ceil((tSeries.length?tSeries[tSeries.length-1].min:0)/10)*10 + 10);
+  const X = m => L+pw*clamp(m/span,0,1), Y = s => Tp+ph-ph*clamp(s,0,1);
+
+  g.strokeStyle="#252B33";
+  for(let i=0;i<=4;i++){ const y=Tp+ph-ph*i/4;
+    g.beginPath(); g.moveTo(L,y); g.lineTo(L+pw,y); g.stroke();
+    g.fillStyle="#616D7A"; g.textAlign="right"; g.fillText((i*25)+"%", L-6, y+3); }
+  for(let i=0;i<=4;i++){ const x=L+pw*i/4;
+    g.beginPath(); g.moveTo(x,Tp); g.lineTo(x,Tp+ph); g.stroke();
+    g.fillStyle="#616D7A"; g.textAlign="center"; g.fillText((span*i/4).toFixed(0), x, H-8); }
+
+  /* the 80% line — where the useful part of the charge ends */
+  g.strokeStyle="#5EE0A8"; g.setLineDash([4,4]);
+  g.beginPath(); g.moveTo(L,Y(0.8)); g.lineTo(L+pw,Y(0.8)); g.stroke(); g.setLineDash([]);
+  g.fillStyle="#5EE0A8"; g.textAlign="left"; g.fillText("80%", L+5, Y(0.8)-5);
+
+  if(tSeries.length>1){
+    g.beginPath(); tSeries.forEach((d,i)=> i?g.lineTo(X(d.min),Y(d.soc)):g.moveTo(X(d.min),Y(d.soc)));
+    g.strokeStyle="#6FD8FF"; g.lineWidth=2.2; g.stroke();
+    const last = tSeries[tSeries.length-1];
+    g.fillStyle="#6FD8FF"; g.beginPath(); g.arc(X(last.min),Y(last.soc),4.5,0,6.29); g.fill();
+  }
+  g.fillStyle="#616D7A"; g.textAlign="center"; g.fillText("minutes since plug-in", L+pw/2, Tp+ph+22);
+}
+
+/* pack grid */
+function drawPack(){
+  const v = veh(), o = setup($("#packCv"), 190); if(!o) return;
+  const {g,W,H} = o;
+  const n = v.cells;
+  let cols = Math.ceil(Math.sqrt(n*W/H));
+  let cw = W/cols, rows = Math.ceil(n/cols);
+  while(rows*cw > H && cols < 400){ cols++; cw = W/cols; rows = Math.ceil(n/cols); }
+  const ch = Math.min(cw, H/rows), gap = Math.max(0.5, Math.min(2, cw*0.14));
+  const offX = (W - cols*cw)/2, offY = (H - rows*ch)/2;
+
+  if(cellJit.length !== n){ cellJit = Array.from({length:n}, () => (Math.random()-0.5)*0.055); }
+  /* the BMS balances cells as the pack approaches full */
+  const spread = 1 - clamp((st.soc-0.85)/0.13, 0, 1);
+
+  for(let i=0;i<n;i++){
+    const r = (i/cols)|0, c = i%cols;
+    const x = offX + c*cw, y = offY + r*ch;
+    const soc = clamp(st.soc + cellJit[i]*spread, 0, 1);
+    g.fillStyle = "#1F2530";
+    g.fillRect(x, y, cw-gap, ch-gap);
+    const fh = (ch-gap)*soc;
+    g.fillStyle = st.P > 0.5 ? "#6FD8FF" : "#4E8DA6";
+    g.globalAlpha = 0.55 + 0.45*soc;
+    g.fillRect(x, y + (ch-gap) - fh, cw-gap, fh);
+    g.globalAlpha = 1;
+  }
+}
+function drawModule(){
+  const v = veh(), cv = $("#modCv"), dpr = Math.min(2,devicePixelRatio||1);
+  cv.width = 230*dpr; cv.height = 92*dpr;
+  const g = cv.getContext("2d"); g.setTransform(dpr,0,0,dpr,0,0); g.clearRect(0,0,230,92);
+  const n = v.perMod, cols = Math.min(n, 10), rows = Math.ceil(n/cols);
+  const cw = 230/cols, ch = 92/rows;
+  for(let i=0;i<n;i++){
+    const x = (i%cols)*cw, y = ((i/cols)|0)*ch;
+    g.fillStyle="#1F2530"; g.fillRect(x+1,y+1,cw-3,ch-3);
+    const fh = (ch-3)*st.soc;
+    g.fillStyle="#6FD8FF"; g.globalAlpha=.55+.45*st.soc;
+    g.fillRect(x+1, y+1+(ch-3)-fh, cw-3, fh); g.globalAlpha=1;
+  }
+}
+
+/* temperature trace */
+function drawTherm(){
+  const o = setup($("#thermCv"), 220); if(!o) return;
+  const {g,W,H} = o, L=32, R=10, Tp=12, B=22, pw=W-L-R, ph=H-Tp-B;
+  const span = Math.max(20, Math.ceil((tSeries.length?tSeries[tSeries.length-1].min:0)/10)*10+10);
+  const Y = t => Tp+ph-ph*clamp((t+20)/80,0,1), X = m => L+pw*clamp(m/span,0,1);
+
+  /* the window where full power is allowed */
+  g.fillStyle="rgba(94,224,168,.09)"; g.fillRect(L, Y(38), pw, Y(25)-Y(38));
+  g.fillStyle="#3E7F65"; g.textAlign="left"; g.fillText("full-power window", L+5, Y(38)+13);
+
+  g.strokeStyle="#252B33";
+  [-20,0,20,40,60].forEach(t=>{
+    g.beginPath(); g.moveTo(L,Y(t)); g.lineTo(L+pw,Y(t)); g.stroke();
+    g.fillStyle="#616D7A"; g.textAlign="right"; g.fillText(t+"°", L-5, Y(t)+3);
+  });
+  if(tSeries.length>1){
+    g.beginPath(); tSeries.forEach((d,i)=> i?g.lineTo(X(d.min),Y(d.T)):g.moveTo(X(d.min),Y(d.T)));
+    g.strokeStyle="#FF5C7A"; g.lineWidth=2.2; g.stroke();
+  }
+  g.strokeStyle="#4A5560"; g.setLineDash([3,4]);
+  g.beginPath(); g.moveTo(L,Y(st.amb)); g.lineTo(L+pw,Y(st.amb)); g.stroke(); g.setLineDash([]);
+  g.fillStyle="#616D7A"; g.textAlign="right"; g.fillText("ambient", L+pw-3, Y(st.amb)-5);
+}
+
+/* ══════ PANELS ══════ */
+function paint(){
+  const v = veh(), cap = chargerCap();
+  $("#mSoc").textContent  = (st.soc*100).toFixed(0)+"%";
+  $("#mSocS").textContent = (st.soc*v.kwh).toFixed(1)+" kWh in pack";
+  $("#mKw").textContent   = st.P.toFixed(st.P<10?1:0);
+  $("#mKwS").textContent  = st.P >= cap-0.5 && st.P>0 ? "kW · charger is the limit" : "kW · pack is the limit";
+  $("#mAmp").textContent  = st.I.toFixed(0);
+  $("#mAmpS").textContent = "A at "+v.V+" V";
+  $("#mTemp").textContent = st.T.toFixed(1);
+  const tf = thermalF(st.T);
+  $("#mTempS").textContent = tf > 0.99 ? "°C · no derate" : `°C · limited to ${(tf*100).toFixed(0)}%`;
+  $("#mTemp").style.color  = tf > 0.99 ? "var(--ok)" : tf > 0.6 ? "var(--electro)" : "var(--heat)";
+  $("#mMin").textContent  = Math.floor(st.min/60)+":"+String(Math.floor(st.min%60)).padStart(2,"0");
+  $("#mMinS").textContent = st.kwh.toFixed(1)+" kWh drawn";
+  $("#cPower").textContent = st.P >= 1000 ? (st.P/1000).toFixed(2)+" MW" : st.P.toFixed(0)+" kW";
+
+  if(st.soc >= 0.8){ etaCache = {t:tick, v:0}; }
+  else if(tick - etaCache.t > 20 || etaCache.v === null){
+    etaCache = {t:tick, v: timeTo(st.veh, st.chg, st.amb, false, st.soc, 0.8)};
+  }
+  const eta = etaCache.v;
+  $("#mEta").textContent = st.soc >= 0.8 ? "done" : eta==null ? "—" : eta.toFixed(0);
+  $("#mEtaS").textContent = st.soc >= 0.8 ? "80% reached"
+    : eta==null ? "minutes remaining"
+    : `min · ${fmtWatch(eta*60/st.speed)} at ${st.speed}\u00D7`;
+
+  /* phase highlight */
+  $("#ph1").classList.toggle("act", st.soc < 0.55);
+  $("#ph2").classList.toggle("act", st.soc >= 0.55 && st.soc < 0.80);
+  $("#ph3").classList.toggle("act", st.soc >= 0.80);
+
+  /* the one message worth reading right now */
+  const w = $("#warnBox");
+  let msg = "";
+  if(st.soc >= 0.999) msg = `<b>Full.</b> Getting here from 80% took ${((st.min - (st.t80||st.min))).toFixed(0)} of the ${st.min.toFixed(0)} minutes on the clock — for the last fifth of the energy.`;
+  else if(st.soc > 0.80) msg = `<b>Free sites are running out.</b> The pack is now accepting ${st.P.toFixed(0)} kW from a ${cap.toFixed(0)} kW charger. Pushing harder would plate lithium metal onto the anode instead of slotting it in, so the charger backs off. On a road trip this is the point to unplug.`;
+  else if(st.T < 10) msg = `<b>The pack is cold.</b> At ${st.T.toFixed(1)} °C the electrolyte is sluggish, so charge acceptance is capped at ${(tf*100).toFixed(0)}% of normal. The pack is warming itself, partly using power from the charger.`;
+  else if(st.T > 40) msg = `<b>The pack is hot.</b> At ${st.T.toFixed(1)} °C the charger is derating to ${(tf*100).toFixed(0)}% to protect cell life. ${v.cool === "air-cooled" ? "An air-cooled pack sheds heat slowly, which is why small EVs often slow down on a second consecutive fast charge." : "The cooling loop is working against the resistive heat the charge itself is producing."}`;
+  else if(chg().ac) msg = `<b>AC charging is limited by the car, not the wall.</b> The onboard charger converts AC to DC and this pack's is rated ${v.acKW} kW, so a ${chg().kW} kW supply delivers ${cap} kW. DC chargers bypass it entirely.`;
+  w.innerHTML = msg; w.classList.toggle("on", !!msg);
+
+  /* derate breakdown */
+  const packLim = v.maxKW*taper(st.soc)*thermalF(st.T);
+  const socLoss = v.maxKW*(1-taper(st.soc));
+  const tempLoss = v.maxKW*taper(st.soc)*(1-thermalF(st.T));
+  const rows = [
+    ["Pack peak capability", v.maxKW, "#9AA9B6"],
+    ["Held back by state of charge", -socLoss, "#C97A45"],
+    ["Held back by temperature", -tempLoss, "#FF5C7A"],
+    ["Charger ceiling", cap, "#E8B84B"],
+    ["Actually flowing", st.P, "#6FD8FF"]
+  ];
+  $("#derateBox").innerHTML = rows.map(([l,val,c])=>`
+    <div style="display:flex;justify-content:space-between;gap:12px;padding:7px 0;border-bottom:1px solid #252B33">
+      <span style="color:var(--mut);font-size:13px">${l}</span>
+      <span class="num" style="color:${c};font-weight:700">${val<0?"−":""}${Math.abs(val).toFixed(0)} kW</span>
+    </div>`).join("");
+  $("#thermCs").textContent = st.heater > 0.5
+    ? `Pack heater drawing ${st.heater.toFixed(1)} kW to reach the window`
+    : `Resistive heating ${st.heat.toFixed(1)} kW against the ${v.cool} loop`;
+
+  /* thermometer */
+  const frac = clamp((st.T+20)/80, 0, 1);
+  const col = tf > 0.99 ? "#5EE0A8" : tf > 0.6 ? "#E8B84B" : "#FF5C7A";
+  $("#thBar").setAttribute("y", (217 - 207*frac).toFixed(1));
+  $("#thBar").setAttribute("height", (207*frac).toFixed(1));
+  $("#thBar").setAttribute("fill", col); $("#thBulb").setAttribute("fill", col);
+
+  /* pack anatomy captions */
+  $("#cellSpec").textContent = `${v.cellV} V · ${v.cellAh} Ah`;
+  $("#modN").textContent = v.perMod+" cells";
+  $("#packN").textContent = v.cells.toLocaleString("en-IN")+" cells";
+  $("#packCap").textContent = `${v.kwh} kWh · ${v.V} V nominal · ${v.cool}`;
+  $("#oneCell").setAttribute("y", (85 - 77*st.soc).toFixed(1));
+  $("#oneCell").setAttribute("height", (77*st.soc).toFixed(1));
+}
+
+/* comparison bars */
+function paintBars(){
+  const v = veh();
+  const res = CHG.map(c => ({
+    c, ok: !(c.truck && st.veh !== "truck"),
+    min: (c.truck && st.veh !== "truck") ? null : timeTo(st.veh, c.id, st.amb, st.pre, 0.10, 0.80)
+  }));
+  const max = Math.max(...res.filter(r=>r.min!=null).map(r=>r.min), 1);
+  $("#bars").innerHTML = res.map(r=>{
+    if(!r.ok) return `<div class="barrow" style="opacity:.3"><span class="bl">${r.c.label}</span>
+      <div class="bt"></div><span class="bv">n/a</span></div>`;
+    const eff = r.c.ac ? Math.min(r.c.kW, v.acKW) : r.c.kW;
+    const txt = r.min == null ? "—" : r.min > 600 ? (r.min/60).toFixed(1)+" h"
+              : r.min > 90 ? (r.min/60).toFixed(1)+" h" : r.min.toFixed(0)+" min";
+    return `<div class="barrow${r.c.id===st.chg?" cur":""}">
+      <span class="bl">${r.c.label} kW${eff<r.c.kW?` <span style="color:var(--mut2)">→${eff}</span>`:""}</span>
+      <div class="bt"><i style="width:${r.min==null?0:clamp(r.min/max*100,1.5,100)}%"></i></div>
+      <span class="bv">${txt}</span></div>`;
+  }).join("");
+  const dc = res.find(r=>r.c.id===(st.veh==="truck"?"mcs":"dc350"));
+  const ac = res.find(r=>r.c.id==="ac7");
+  $("#timeNote").textContent = (dc&&dc.min&&ac&&ac.min)
+    ? `At ${st.amb} °C ambient${st.pre?", preconditioned":""}, the fastest option is about ${(ac.min/dc.min).toFixed(0)}× quicker than a home socket for the same 10→80% window. Charging the remaining 20% would add roughly ${(timeTo(st.veh, st.chg, st.amb, st.pre, 0.80, 0.995)||0).toFixed(0)} minutes on your selected charger.`
+    : "";
+}
+
+/* ══════ LOOP ══════ */
+let lastT = performance.now(), acc = 0, tick = 0, etaCache = {t:-1, v:null};
+/* sample often on a fast DC charge, sparsely on a multi-hour AC one */
+const sampleEvery = () => chargerCap() >= 40 ? 0.1 : 1.5;
+function frame(now){
+  if(document.documentElement.dataset.page !== "battery"){ lastT = now; requestAnimationFrame(frame); return; }
+  const rdt = Math.min(0.06, (now-lastT)/1000); lastT = now;
+  if(st.run && st.soc < 1){
+    /* st.speed is a multiplier on real time, so 10x means ten charge-seconds per second */
+    acc += rdt*st.speed/60;
+    const DT = 0.02;                       // integrate in fine steps so motion stays smooth
+    let guard = 0;
+    while(acc >= DT && guard++ < 4000){
+      const before = st.soc;
+      const r = integrate(st, DT);
+      st.P=r.P; st.I=r.I; st.limit=r.limit; st.heat=r.heat; st.heater=r.heater;
+      if(before < 0.8 && st.soc >= 0.8) st.t80 = st.min;
+      acc -= DT;
+      if(st.min >= st.nextSample){
+        tSeries.push({min:st.min, soc:st.soc, P:st.P, T:st.T});
+        st.nextSample = st.min + sampleEvery();
+      }
+    }
+    if(tSeries.length > 2600) tSeries = tSeries.filter((_,i)=>i%2===0);
+  } else if(st.soc >= 1){ st.P = 0; st.I = 0; }
+
+  eOff -= (60 + 500*clamp(st.P/veh().maxKW,0,1))*rdt;
+  $("#eFlow").setAttribute("stroke-dashoffset", eOff.toFixed(1));
+  $("#eFlow").setAttribute("opacity", st.P > 0.5 ? "0.9" : "0.12");
+  updateIons(rdt);
+
+  if(++tick % 4 === 0){
+    paintSites(); paint();
+    drawCurveP(); drawCurveT(); drawTherm(); drawPack(); drawModule();
+  }
+  requestAnimationFrame(frame);
+}
+
+/* ══════ WIRING ══════ */
+function buildChargerChips(){
+  const g = $("#chgGrp");
+  g.innerHTML = '<span class="gl">Charger</span>' + CHG.map(c =>
+    `<button class="chip" data-chg="${c.id}" aria-pressed="${c.id===st.chg}"
+      ${c.truck && st.veh!=="truck" ? "disabled title='Megawatt Charging System is for heavy vehicles'" : ""}>${c.label}</button>`
+  ).join("");
+  g.querySelectorAll("[data-chg]").forEach(b => b.onclick = () => {
+    st.chg = b.dataset.chg; restart(); buildChargerChips();
+  });
+}
+function restart(){
+  const keep = st;
+  st = fresh(true);
+  st.veh = keep.veh; st.chg = keep.chg; st.amb = keep.amb; st.pre = keep.pre;
+  st.run = keep.run; st.speed = keep.speed;
+  st.T = st.pre ? Math.max(st.amb, 25) : st.amb;
+  tSeries = []; ions = []; cellJit = []; $("#ions").innerHTML = "";
+  paintBars(); paint();
+}
+$$("[data-veh]").forEach(b => b.onclick = () => {
+  $$("[data-veh]").forEach(x => x.setAttribute("aria-pressed", String(x===b)));
+  st.veh = b.dataset.veh;
+  if(CHG.find(c=>c.id===st.chg).truck && st.veh!=="truck") st.chg = "dc350";
+  if(st.veh === "truck" && st.chg === "dc350") st.chg = "mcs";
+  restart(); buildChargerChips();
+});
+$("#amb").oninput = e => {
+  st.amb = +e.target.value; $("#ambV").textContent = st.amb+" °C";
+  if(st.min < 0.3) st.T = st.pre ? Math.max(st.amb,25) : st.amb;
+  paintBars();
+};
+$("#precon").onclick = e => {
+  st.pre = !st.pre; e.target.setAttribute("aria-pressed", String(st.pre));
+  restart();
+};
+$("#run").onclick = e => {
+  st.run = !st.run;
+  e.target.textContent = st.run ? "Pause" : "Resume";
+  e.target.setAttribute("aria-pressed", String(st.run));
+};
+$$("[data-sp]").forEach(b => b.onclick = () => {
+  $$("[data-sp]").forEach(x => x.setAttribute("aria-pressed", String(x === b)));
+  st.speed = +b.dataset.sp;
+});
+$("#reset").onclick = restart;
+addEventListener("resize", () => { drawCurveP(); drawCurveT(); drawTherm(); drawPack(); });
+
+/* boot the simulation first — nothing optional should be able to block it */
+st = fresh(false);
+buildSites(); buildChargerChips(); paintSites(); paint(); paintBars();
+requestAnimationFrame(frame);
+
+/* scroll reveal is presentation only, so degrade quietly if unsupported */
+const reduceMotion = typeof matchMedia === "function"
+  && matchMedia("(prefers-reduced-motion: reduce)").matches;
+if(!reduceMotion && typeof IntersectionObserver === "function"){
+  const io = new IntersectionObserver(
+    es => es.forEach(en => { if(en.isIntersecting) en.target.classList.add("in"); }),
+    {threshold:0.08});
+  $$(".reveal").forEach(el => io.observe(el));
+} else $$(".reveal").forEach(el => el.classList.add("in"));
+})();
+</script>
+
+<script>
+/* ══════ router ══════ */
+(function(){
+  const PAGES = {
+    plaza:   {el:document.querySelector(".pg-plaza"), title:"Vayu·Surya Charging Plaza — EV Charging Lab"},
+    battery: {el:document.querySelector(".pg-batt"),  title:"Inside the Charge — EV Charging Lab"}
+  };
+  const tabs = [...document.querySelectorAll(".tabs a")];
+
+  function go(name){
+    if(!PAGES[name]) name = "plaza";
+    document.documentElement.dataset.page = name;
+    for(const k in PAGES) PAGES[k].el.hidden = (k !== name);
+    tabs.forEach(a => a.setAttribute("aria-current", a.dataset.page === name ? "page" : "false"));
+    document.title = PAGES[name].title;
+    /* both pages draw to canvases, which measure zero while hidden — nudge them */
+    dispatchEvent(new Event("resize"));
+  }
+
+  tabs.forEach(a => a.addEventListener("click", () => {
+    /* let the hash change drive the switch, then start the new page at the top */
+    requestAnimationFrame(() => scrollTo({top:0, behavior:"instant"}));
+  }));
+  addEventListener("hashchange", () => go(location.hash.slice(1)));
+  go(location.hash.slice(1) || "plaza");
+  requestAnimationFrame(() => dispatchEvent(new Event("resize")));
+})();
+</script>
+</body>
+</html>
