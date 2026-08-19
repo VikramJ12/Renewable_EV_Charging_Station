@@ -1,0 +1,1042 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Vayu–Surya Charging Plaza · Digital Twin</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+
+<style>
+:root{
+  --void:#070B10; --steel:#0E1621; --steel2:#131F2C; --rail:#1D2C3B; --rail2:#2A3D50;
+  --txt:#D8E3ED; --mut:#6F8598; --mut2:#4C5F72;
+  --solar:#FFB020; --wind:#57D3E8; --store:#9D7BFF; --grid:#FF7A6B; --ev:#45E0A0; --rest:#FF9A5C;
+  --disp:"Barlow Condensed", "Arial Narrow", sans-serif;
+  --mono:"IBM Plex Mono", ui-monospace, "SFMono-Regular", Consolas, monospace;
+  --body:"Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  background:var(--void); color:var(--txt); font-family:var(--body);
+  font-size:13px; line-height:1.45; -webkit-font-smoothing:antialiased;
+}
+.nameplate{
+  font-family:var(--disp); text-transform:uppercase; letter-spacing:.14em; font-weight:600;
+}
+
+/* ── shell ─────────────────────────────────────────────── */
+.shell{max-width:1560px; margin:0 auto; padding:14px 16px 40px}
+
+header.bar{
+  display:flex; flex-wrap:wrap; align-items:center; gap:14px;
+  border:1px solid var(--rail); background:linear-gradient(180deg,var(--steel2),var(--steel));
+  border-radius:3px; padding:10px 14px; margin-bottom:12px;
+}
+.brand{display:flex; align-items:baseline; gap:10px; margin-right:auto}
+.brand h1{font-family:var(--disp); font-size:23px; letter-spacing:.16em; text-transform:uppercase; margin:0; font-weight:700}
+.brand .sub{font-family:var(--mono); font-size:10px; color:var(--mut); letter-spacing:.08em}
+.clock{font-family:var(--mono); font-size:22px; font-weight:600; letter-spacing:.04em; font-variant-numeric:tabular-nums}
+.clock small{font-size:10px; color:var(--mut); letter-spacing:.14em; display:block; text-align:right; font-family:var(--disp); text-transform:uppercase}
+.ctrls{display:flex; gap:6px; align-items:center}
+
+button,select,input[type=number]{font-family:var(--disp); color:var(--txt)}
+.btn{
+  background:var(--steel2); border:1px solid var(--rail2); border-radius:2px;
+  padding:6px 12px; font-size:12px; letter-spacing:.12em; text-transform:uppercase;
+  cursor:pointer; transition:border-color .15s, background .15s, color .15s;
+}
+.btn:hover{border-color:var(--wind); color:#fff}
+.btn:focus-visible{outline:2px solid var(--wind); outline-offset:2px}
+.btn.on{background:var(--wind); border-color:var(--wind); color:#04202b; font-weight:700}
+.btn.warn.on{background:var(--grid); border-color:var(--grid); color:#2b0a06}
+
+/* ── layout ────────────────────────────────────────────── */
+.grid-main{display:grid; grid-template-columns:minmax(0,1fr) 320px; gap:12px}
+@media(max-width:1080px){ .grid-main{grid-template-columns:minmax(0,1fr)} }
+
+.panel{border:1px solid var(--rail); background:var(--steel); border-radius:3px}
+.panel > .head{
+  display:flex; align-items:center; gap:8px; padding:7px 12px;
+  border-bottom:1px solid var(--rail); background:var(--steel2);
+}
+.panel > .head h2{margin:0; font-family:var(--disp); font-size:12px; letter-spacing:.18em; text-transform:uppercase; color:var(--mut)}
+.panel > .head .tag{margin-left:auto; font-family:var(--mono); font-size:10px; color:var(--mut2)}
+
+/* ── scene ─────────────────────────────────────────────── */
+#scene{display:block; width:100%; height:auto; background:#000}
+.svgtxt{font-family:var(--mono); font-size:11px; fill:var(--txt)}
+.svglbl{font-family:var(--disp); font-size:11.5px; letter-spacing:.16em; text-transform:uppercase; fill:var(--mut)}
+.flow{fill:none; stroke-linecap:round}
+.track{fill:none; stroke:#16222E; stroke-width:2.5}
+.carslide{transition:transform .85s cubic-bezier(.2,.8,.25,1), opacity .5s}
+@media (prefers-reduced-motion: reduce){ .carslide{transition:none} }
+
+/* ── control column ────────────────────────────────────── */
+.ctlbody{padding:12px}
+.field{margin-bottom:13px}
+.field label{
+  display:flex; justify-content:space-between; align-items:baseline;
+  font-family:var(--disp); font-size:11px; letter-spacing:.15em; text-transform:uppercase; color:var(--mut); margin-bottom:5px;
+}
+.field label b{font-family:var(--mono); font-size:12px; color:var(--txt); font-weight:500; letter-spacing:0}
+input[type=range]{width:100%; -webkit-appearance:none; appearance:none; background:transparent; height:16px; margin:0}
+input[type=range]::-webkit-slider-runnable-track{height:2px; background:var(--rail2)}
+input[type=range]::-moz-range-track{height:2px; background:var(--rail2)}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none; width:12px; height:12px; background:var(--wind); border-radius:50%; margin-top:-5px; cursor:pointer}
+input[type=range]::-moz-range-thumb{width:12px; height:12px; background:var(--wind); border:0; border-radius:50%; cursor:pointer}
+input[type=range]:focus-visible{outline:2px solid var(--wind); outline-offset:3px}
+select,input[type=number]{
+  width:100%; background:var(--steel2); border:1px solid var(--rail2); border-radius:2px;
+  padding:5px 7px; font-size:12px; letter-spacing:.06em;
+}
+.two{display:grid; grid-template-columns:1fr 1fr; gap:8px}
+.toggles{display:grid; gap:6px}
+.tg{
+  display:flex; align-items:center; gap:8px; cursor:pointer; user-select:none;
+  font-family:var(--disp); font-size:11.5px; letter-spacing:.1em; text-transform:uppercase; color:var(--mut);
+  border:1px solid var(--rail); border-radius:2px; padding:6px 8px;
+}
+.tg input{accent-color:var(--ev); width:13px; height:13px; margin:0}
+.tg.act{color:var(--txt); border-color:var(--rail2)}
+.presets{display:grid; grid-template-columns:1fr 1fr; gap:6px; margin-top:2px}
+.presets .btn{padding:5px 4px; font-size:11px; letter-spacing:.08em}
+
+/* ── KPI ───────────────────────────────────────────────── */
+.kpis{display:grid; grid-template-columns:repeat(4,1fr); gap:1px; background:var(--rail)}
+@media(max-width:760px){ .kpis{grid-template-columns:repeat(2,1fr)} }
+.kpi{background:var(--steel); padding:9px 11px}
+.kpi .k{font-family:var(--disp); font-size:10px; letter-spacing:.16em; text-transform:uppercase; color:var(--mut2)}
+.kpi .v{font-family:var(--mono); font-size:19px; font-weight:600; font-variant-numeric:tabular-nums; margin-top:2px}
+.kpi .u{font-size:10px; color:var(--mut); font-family:var(--disp); letter-spacing:.1em}
+
+/* ── bays ──────────────────────────────────────────────── */
+.bays{display:grid; grid-template-columns:repeat(5,1fr); gap:1px; background:var(--rail)}
+@media(max-width:900px){ .bays{grid-template-columns:repeat(2,1fr)} }
+.bay{background:var(--steel); padding:8px 9px; min-height:86px; border-top:2px solid var(--rail2)}
+.bay.dc{border-top-color:var(--grid)}
+.bay.ac{border-top-color:var(--ev)}
+.bay .bh{display:flex; justify-content:space-between; align-items:baseline}
+.bay .bid{font-family:var(--disp); font-size:12px; letter-spacing:.14em; color:var(--mut)}
+.bay .bkw{font-family:var(--mono); font-size:12px; color:var(--mut2)}
+.bay .bcar{font-size:11.5px; margin-top:4px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+.bay .bfree{font-family:var(--disp); font-size:12px; letter-spacing:.14em; color:var(--mut2); margin-top:6px}
+.socbar{height:5px; background:#16222E; border-radius:1px; margin-top:6px; overflow:hidden}
+.socbar i{display:block; height:100%; background:var(--ev); transition:width .3s}
+.bay .bstat{display:flex; justify-content:space-between; font-family:var(--mono); font-size:10.5px; color:var(--mut); margin-top:4px}
+
+/* ── charts + log ──────────────────────────────────────── */
+.lower{display:grid; grid-template-columns:minmax(0,1.55fr) minmax(0,1fr); gap:12px; margin-top:12px}
+@media(max-width:1080px){ .lower{grid-template-columns:minmax(0,1fr)} }
+canvas{display:block; width:100%}
+.legend{display:flex; flex-wrap:wrap; gap:12px; padding:8px 12px; border-top:1px solid var(--rail)}
+.legend span{display:flex; align-items:center; gap:5px; font-family:var(--disp); font-size:11px; letter-spacing:.12em; text-transform:uppercase; color:var(--mut)}
+.legend i{width:9px; height:9px; border-radius:1px; display:block}
+#log{height:214px; overflow-y:auto; padding:6px 0; font-family:var(--mono); font-size:11px}
+#log div{padding:2px 12px; display:flex; gap:9px; border-bottom:1px solid #101A24}
+#log time{color:var(--mut2); flex:none}
+#log b{font-weight:500}
+.spec{padding:10px 12px; font-family:var(--mono); font-size:11px; color:var(--mut); line-height:1.7}
+.spec b{color:var(--txt); font-weight:500}
+.spec .row{display:flex; justify-content:space-between; gap:10px; border-bottom:1px dotted #182533; padding:1px 0}
+footer{margin-top:16px; font-family:var(--mono); font-size:10.5px; color:var(--mut2); line-height:1.7}
+</style>
+
+<div class="shell">
+
+<header class="bar">
+  <div class="brand">
+    <h1>Vayu&nbsp;·&nbsp;Surya Charging Plaza</h1>
+    <span class="sub">NH-48 HIGHWAY HUB / DIGITAL TWIN v1.0</span>
+  </div>
+  <div class="clock"><span id="clk">06:00</span><small id="dayl">Day 1 · Off-peak</small></div>
+  <div class="ctrls">
+    <button class="btn on" id="playBtn">Pause</button>
+    <button class="btn" data-sp="10">10×</button>
+    <button class="btn on" data-sp="60">60×</button>
+    <button class="btn" data-sp="240">240×</button>
+    <button class="btn" data-sp="900">900×</button>
+    <button class="btn" id="resetBtn">Reset</button>
+  </div>
+</header>
+
+<div class="grid-main">
+  <!-- ══ LEFT: the twin ══ -->
+  <div>
+    <div class="panel">
+      <div class="head"><h2>Plant view &amp; single-line diagram</h2><span class="tag" id="modeTag">ISLANDED</span></div>
+      <svg id="scene" viewBox="0 0 1400 730" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Animated view of the charging plaza">
+        <defs>
+          <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+            <stop id="skyTop" offset="0" stop-color="#3E7FC1"/>
+            <stop id="skyBot" offset="1" stop-color="#A9D4EE"/>
+          </linearGradient>
+          <linearGradient id="panelGrad" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0" stop-color="#16344F"/><stop offset="1" stop-color="#0C1E30"/>
+          </linearGradient>
+          <linearGradient id="sunGlow" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="#FFE9A8"/><stop offset="1" stop-color="#FFB020"/>
+          </linearGradient>
+          <radialGradient id="haloG"><stop offset="0" stop-color="#FFD27A" stop-opacity=".55"/><stop offset="1" stop-color="#FFD27A" stop-opacity="0"/></radialGradient>
+          <linearGradient id="ground" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="#2E3A2C"/><stop offset="1" stop-color="#1A2320"/>
+          </linearGradient>
+          <pattern id="pv" width="13" height="13" patternUnits="userSpaceOnUse">
+            <rect width="13" height="13" fill="url(#panelGrad)"/>
+            <path d="M13 0V13M0 13H13" stroke="#0A1622" stroke-width="1.4"/>
+          </pattern>
+          <clipPath id="battClip"><rect x="404" y="629" width="150" height="62" rx="2"/></clipPath>
+          <!-- one blade, root at hub origin, pointing straight up; instanced 3× at 120° -->
+          <path id="bladeShape" d="M-6,-2 C-11.5,-33 -10.5,-84 -2.6,-114.5 C-1.7,-117.8 1.4,-117.8 2.3,-114.5 C7.2,-84 6.2,-37 6,-2 Z"/>
+          <path id="bladeEdge" d="M-2.6,-114.5 C-10.5,-84 -11.5,-33 -6,-2 L-2.6,-2 C-7,-33 -6,-84 -0.6,-114.5 Z"/>
+        </defs>
+
+        <!-- sky -->
+        <rect x="0" y="0" width="1400" height="500" fill="url(#sky)"/>
+        <g id="stars" opacity="0"></g>
+        <g id="sunG"><circle r="70" fill="url(#haloG)"/><circle id="sun" r="21" fill="url(#sunGlow)"/></g>
+        <circle id="moon" r="14" fill="#DCE6F0" opacity="0"/>
+        <g id="clouds" opacity=".5"></g>
+
+        <!-- distant hills -->
+        <path d="M0 470 L120 424 L230 462 L340 418 L470 470 L640 432 L800 470 L960 440 L1120 470 L1260 444 L1400 472 L1400 500 L0 500Z" fill="#1B2A33" opacity=".85"/>
+
+        <!-- ground -->
+        <rect x="0" y="480" width="1400" height="70" fill="url(#ground)"/>
+        <rect x="300" y="486" width="820" height="64" fill="#1E242A"/>
+        <path d="M310 519 H1110" stroke="#3C4650" stroke-width="2" stroke-dasharray="16 14"/>
+        <rect x="0" y="548" width="1400" height="182" fill="#080D13"/>
+        <text class="svglbl" x="18" y="571" fill="#3B4B5C">Underground LV / MV distribution</text>
+
+        <!-- ══ WIND TURBINE (Suzlon) ══ -->
+        <g id="turbine">
+          <path d="M170 484 L190 484 L184 160 L176 160 Z" fill="#C9D4DD"/>
+          <path d="M180 484 L190 484 L184 160 L180 160 Z" fill="#9BAAB8"/>
+          <ellipse cx="180" cy="486" rx="30" ry="7" fill="#232C33"/>
+          <rect x="164" y="146" width="36" height="17" rx="7" fill="#DCE6F0"/>
+          <rect x="164" y="146" width="36" height="8" rx="4" fill="#fff" opacity=".55"/>
+          <g id="rotor" transform="translate(160,154)">
+            <g id="blades">
+              <g>
+                <use href="#bladeShape" fill="#EDF3F8"/>
+                <use href="#bladeEdge" fill="#B9C7D4" opacity=".55"/>
+              </g>
+              <g transform="rotate(120)">
+                <use href="#bladeShape" fill="#EDF3F8"/>
+                <use href="#bladeEdge" fill="#B9C7D4" opacity=".55"/>
+              </g>
+              <g transform="rotate(240)">
+                <use href="#bladeShape" fill="#EDF3F8"/>
+                <use href="#bladeEdge" fill="#B9C7D4" opacity=".55"/>
+              </g>
+            </g>
+            <circle r="9" fill="#B7C4D0"/><circle r="4" fill="#7C8B99"/>
+          </g>
+          <text class="svglbl" x="180" y="512" text-anchor="middle" id="wtName">SUZLON S52 · 600 kW</text>
+          <text class="svgtxt" x="180" y="530" text-anchor="middle" fill="#57D3E8" id="wtOut">0 kW</text>
+          <text class="svgtxt" x="292" y="150" text-anchor="start" fill="#8FA6B8" font-size="10" id="wtWind">0.0 m/s</text>
+        </g>
+
+        <!-- ══ DC CANOPY ══ -->
+        <g id="zoneDC">
+          <path d="M320 300 L744 276 L744 292 L320 316 Z" fill="#2B3742"/>
+          <path d="M326 296 L738 273 L738 279 L326 302 Z" fill="url(#pv)"/>
+          <path id="glowDC" d="M326 296 L738 273 L738 279 L326 302 Z" fill="#FFB020" opacity="0"/>
+          <rect x="326" y="310" width="9" height="176" fill="#3A4752"/>
+          <rect x="728" y="287" width="9" height="199" fill="#3A4752"/>
+          <text class="svglbl" x="532" y="262" text-anchor="middle" fill="#8FA6B8">DC Fast canopy · 90 kWp</text>
+        </g>
+
+        <!-- ══ AC CANOPY ══ -->
+        <g id="zoneAC">
+          <path d="M752 322 L1146 304 L1146 318 L752 336 Z" fill="#2B3742"/>
+          <path d="M757 318 L1141 301 L1141 307 L757 324 Z" fill="url(#pv)"/>
+          <path id="glowAC" d="M757 318 L1141 301 L1141 307 L757 324 Z" fill="#FFB020" opacity="0"/>
+          <rect x="758" y="330" width="8" height="156" fill="#3A4752"/>
+          <rect x="1036" y="317" width="8" height="169" fill="#3A4752"/>
+          <text class="svglbl" x="949" y="290" text-anchor="middle" fill="#8FA6B8">AC canopy · 70 kWp</text>
+        </g>
+
+        <!-- ══ RESTAURANT ══ -->
+        <g id="rest">
+          <path d="M1130 380 L1250 322 L1370 380 Z" fill="#3A4752"/>
+          <path d="M1141 378 L1250 325 L1250 331 L1152 380 Z" fill="url(#pv)"/>
+          <path d="M1359 378 L1250 325 L1250 331 L1348 380 Z" fill="url(#pv)"/>
+          <path id="glowR1" d="M1141 378 L1250 325 L1250 331 L1152 380 Z" fill="#FFB020" opacity="0"/>
+          <path id="glowR2" d="M1359 378 L1250 325 L1250 331 L1348 380 Z" fill="#FFB020" opacity="0"/>
+          <rect x="1148" y="380" width="204" height="106" fill="#252F38"/>
+          <rect x="1148" y="380" width="204" height="7" fill="#39454F"/>
+          <g id="restWin">
+            <rect x="1166" y="400" width="42" height="34" rx="2" fill="#101A22"/>
+            <rect x="1226" y="400" width="42" height="34" rx="2" fill="#101A22"/>
+            <rect x="1286" y="400" width="42" height="34" rx="2" fill="#101A22"/>
+            <rect x="1226" y="446" width="46" height="40" rx="2" fill="#101A22"/>
+          </g>
+          <text class="svglbl" x="1250" y="512" text-anchor="middle" fill="#8FA6B8">Restaurant · 60 kWp roof</text>
+          <text class="svgtxt" x="1250" y="530" text-anchor="middle" fill="#FF9A5C" id="restOut">0 kW</text>
+        </g>
+
+        <g id="cars"></g>
+
+        <!-- ══ BUSBAR (single-line) ══ -->
+        <rect x="80" y="592" width="1250" height="11" rx="2" fill="#243546"/>
+        <rect id="busLive" x="80" y="592" width="1250" height="11" rx="2" fill="#57D3E8" opacity=".1"/>
+        <text class="svglbl" x="88" y="586" fill="#4C5F72">415 V AC PLANT BUSBAR</text>
+        <text class="svgtxt" x="1322" y="586" text-anchor="end" fill="#6F8598" id="busTxt">—</text>
+
+        <!-- drop lines: tracks -->
+        <g>
+          <path class="track" d="M180 486 V592"/>
+          <path class="track" d="M470 480 V592"/>
+          <path class="track" d="M572 480 V592"/>
+          <path class="track" d="M830 480 V592"/>
+          <path class="track" d="M960 480 V592"/>
+          <path class="track" d="M1198 486 V592"/>
+          <path class="track" d="M1290 486 V592"/>
+          <path class="track" d="M479 629 V603"/>
+          <path class="track" d="M1010 629 V603"/>
+        </g>
+        <!-- drop lines: animated flow -->
+        <path id="fWind"  class="flow" stroke="#57D3E8" d="M180 486 V592"/>
+        <path id="fSolDC" class="flow" stroke="#FFB020" d="M470 480 V592"/>
+        <path id="fEvDC"  class="flow" stroke="#FF7A6B" d="M572 592 V480"/>
+        <path id="fSolAC" class="flow" stroke="#FFB020" d="M830 480 V592"/>
+        <path id="fEvAC"  class="flow" stroke="#45E0A0" d="M960 592 V480"/>
+        <path id="fSolR"  class="flow" stroke="#FFB020" d="M1198 486 V592"/>
+        <path id="fRest"  class="flow" stroke="#FF9A5C" d="M1290 592 V486"/>
+        <path id="fBatt"  class="flow" stroke="#9D7BFF" d="M479 629 V603"/>
+        <path id="fGrid"  class="flow" stroke="#FF7A6B" d="M1010 629 V603"/>
+
+        <!-- ══ BESS ══ -->
+        <g id="bess">
+          <rect x="400" y="625" width="158" height="70" rx="3" fill="#141E29" stroke="#2A3D50"/>
+          <g clip-path="url(#battClip)"><rect id="battFill" x="404" y="629" width="150" height="62" fill="#9D7BFF" opacity=".3"/></g>
+          <path d="M404 640 H554 M404 655 H554 M404 670 H554" stroke="#0E1621" stroke-width="1" opacity=".6"/>
+          <text class="svglbl" x="479" y="618" text-anchor="middle" fill="#8FA6B8">BESS · 600 kWh / 300 kW</text>
+          <text class="svgtxt" x="479" y="659" text-anchor="middle" font-size="17" font-weight="600" fill="#CBB9FF" id="socTxt">55%</text>
+          <text class="svgtxt" x="479" y="712" text-anchor="middle" fill="#9D7BFF" id="battTxt">idle</text>
+        </g>
+
+        <!-- ══ GRID ══ -->
+        <g id="gridnode">
+          <rect x="930" y="625" width="160" height="70" rx="3" fill="#141E29" stroke="#2A3D50"/>
+          <path d="M990 640 L978 662 H998 L986 682" stroke="#FF7A6B" stroke-width="2.6" fill="none" stroke-linejoin="round" stroke-linecap="round"/>
+          <path d="M1030 646 v30 M1018 646 v30 M1042 646 v30" stroke="#42525F" stroke-width="2.4"/>
+          <text class="svglbl" x="1010" y="618" text-anchor="middle" fill="#8FA6B8">MSEDCL grid · 11 kV</text>
+          <text class="svgtxt" x="1010" y="712" text-anchor="middle" fill="#FF7A6B" id="gridTxt">0 kW</text>
+        </g>
+      </svg>
+    </div>
+
+    <div class="panel" style="margin-top:12px">
+      <div class="head"><h2>Charge point status</h2><span class="tag" id="queueTag">Queue 0</span></div>
+      <div class="bays" id="bays"></div>
+    </div>
+  </div>
+
+  <!-- ══ RIGHT: controls ══ -->
+  <div>
+    <div class="panel">
+      <div class="head"><h2>Operating conditions</h2></div>
+      <div class="ctlbody">
+        <div class="field">
+          <label for="wtSel">Wind turbine</label>
+          <select id="wtSel">
+            <option value="S52">Suzlon S52 — 600 kW · Ø52 m · 75 m hub</option>
+            <option value="S66">Suzlon S66 — 1250 kW · Ø66 m · 79 m hub</option>
+            <option value="S97">Suzlon S97 — 2100 kW · Ø97 m · 90 m hub</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="wind">Wind speed @10 m <b><span id="windV">5.5</span> m/s</b></label>
+          <input type="range" id="wind" min="0" max="28" step="0.5" value="5.5">
+        </div>
+        <div class="field">
+          <label for="cloud">Cloud cover <b><span id="cloudV">15</span>%</b></label>
+          <input type="range" id="cloud" min="0" max="100" step="1" value="15">
+        </div>
+        <div class="field">
+          <label for="arr">EV arrival rate <b><span id="arrV">1.0</span>×</b></label>
+          <input type="range" id="arr" min="0" max="3" step="0.1" value="1">
+        </div>
+        <div class="field two">
+          <div>
+            <label for="tdc">DC tariff <b>₹/kWh</b></label>
+            <input type="number" id="tdc" value="22" min="0" step="0.5">
+          </div>
+          <div>
+            <label for="tac">AC tariff <b>₹/kWh</b></label>
+            <input type="number" id="tac" value="12" min="0" step="0.5">
+          </div>
+        </div>
+        <div class="toggles">
+          <label class="tg act"><input type="checkbox" id="tImp" checked> Allow grid import</label>
+          <label class="tg act"><input type="checkbox" id="tExp" checked> Allow grid export</label>
+          <label class="tg act"><input type="checkbox" id="tNight" checked> Charge BESS on off-peak grid</label>
+          <label class="tg act"><input type="checkbox" id="tCurt" checked> Throttle AC bays at peak tariff</label>
+          <label class="tg act"><input type="checkbox" id="tAuto" checked> Auto weather drift</label>
+        </div>
+        <div class="presets">
+          <button class="btn" data-preset="clear">Clear &amp; breezy</button>
+          <button class="btn" data-preset="monsoon">Monsoon</button>
+          <button class="btn" data-preset="calm">Still night</button>
+          <button class="btn" data-preset="storm">Gale / cut-out</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel" style="margin-top:12px">
+      <div class="head"><h2>Today</h2><span class="tag" id="tou">Off-peak</span></div>
+      <div class="kpis" style="grid-template-columns:1fr 1fr">
+        <div class="kpi"><div class="k">Renewable share</div><div class="v" id="kRen">—</div><div class="u">of site load</div></div>
+        <div class="kpi"><div class="k">Energy delivered</div><div class="v" id="kEv">—</div><div class="u">kWh to EVs</div></div>
+        <div class="kpi"><div class="k">Charging revenue</div><div class="v" id="kRev">—</div><div class="u">rupees</div></div>
+        <div class="kpi"><div class="k">Grid energy cost</div><div class="v" id="kCost">—</div><div class="u">rupees</div></div>
+        <div class="kpi"><div class="k">Export credit</div><div class="v" id="kExp">—</div><div class="u">rupees</div></div>
+        <div class="kpi"><div class="k">Gross margin</div><div class="v" id="kMar">—</div><div class="u">rupees</div></div>
+        <div class="kpi"><div class="k">Sessions</div><div class="v" id="kCars">—</div><div class="u">served / lost</div></div>
+        <div class="kpi"><div class="k">CO₂ avoided</div><div class="v" id="kCo2">—</div><div class="u">kg</div></div>
+      </div>
+      <div class="spec" id="specBox"></div>
+    </div>
+  </div>
+</div>
+
+<div class="lower">
+  <div class="panel">
+    <div class="head"><h2>Power balance · 24 h</h2><span class="tag">kW</span></div>
+    <canvas id="chart" height="440"></canvas>
+    <div class="legend">
+      <span><i style="background:var(--wind)"></i>Wind</span>
+      <span><i style="background:var(--solar)"></i>Solar</span>
+      <span><i style="background:var(--store)"></i>BESS discharge</span>
+      <span><i style="background:var(--grid)"></i>Grid import</span>
+      <span><i style="background:#fff"></i>Site load</span>
+      <span><i style="background:var(--ev)"></i>State of charge</span>
+    </div>
+  </div>
+  <div class="panel">
+    <div class="head"><h2>Event log</h2><span class="tag" id="logTag">live</span></div>
+    <div id="log"></div>
+  </div>
+</div>
+
+<footer>
+  Simulation only. Wind output uses the cubic power-curve approximation between cut-in and rated wind speed with a 1/7-power-law shear correction to hub height; PV uses a clear-sky sine irradiance model for 18.5°N with a −0.38 %/°C temperature coefficient. Tariffs, arrival profiles and vehicle data are representative, not quoted from any operator. Suzlon turbine names are used to identify machine classes only.
+</footer>
+</div>
+
+<script>
+"use strict";
+const $ = s => document.querySelector(s);
+const SVGNS = "http://www.w3.org/2000/svg";
+const clamp = (v,a,b) => v<a?a:v>b?b:v;
+const lerp  = (a,b,t) => a+(b-a)*t;
+const rnd   = (a,b) => a+Math.random()*(b-a);
+
+/* ══════════ PLANT CONFIGURATION ══════════ */
+const TURBINES = {
+  S52:{name:"Suzlon S52",  kW:600,  d:52, hub:75, cutIn:3.0, rated:13.0, cutOut:25},
+  S66:{name:"Suzlon S66",  kW:1250, d:66, hub:79, cutIn:4.0, rated:14.0, cutOut:25},
+  S97:{name:"Suzlon S97",  kW:2100, d:97, hub:90, cutIn:3.5, rated:11.5, cutOut:20}
+};
+const PV = { dc:90, ac:70, rest:60 };            // kWp per array
+const BESS = { cap:600, pMax:300, eff:0.96, socMin:0.10, socMax:0.96, nightTarget:0.75 };
+const GRID = { peak:11.5, off:6.5, exportRate:4.2, maxImport:400, co2:0.71 };
+const DC = { n:4, kW:60 }, AC = { n:6, kW:22 };
+
+const CARS = [
+  {m:"Tata Nexon EV",   cap:45.0, ac:7.2, dc:50 },
+  {m:"MG ZS EV",        cap:50.3, ac:11.0,dc:76 },
+  {m:"Hyundai Ioniq 5", cap:72.6, ac:11.0,dc:150},
+  {m:"BYD Atto 3",      cap:60.5, ac:7.0, dc:80 },
+  {m:"Tata Tiago EV",   cap:24.0, ac:7.2, dc:35 },
+  {m:"Mahindra XUV400", cap:39.4, ac:7.2, dc:50 },
+  {m:"Kia EV6",         cap:77.4, ac:11.0,dc:240},
+  {m:"Citroën ëC3",     cap:29.2, ac:3.3, dc:35 }
+];
+const PAINT = ["#D8DEE6","#2E3B49","#B23B3B","#2E6E8E","#5A6470","#1F2A34","#8C9AA6","#3F5D45"];
+const REST_LOAD = [8,7,7,7,8,12,20,28,32,30,34,48,62,58,42,36,40,52,68,72,60,40,22,12];
+const ARRIVALS  = [1,.6,.5,.5,.8,2,4,6.5,8,7,6,7,9.5,8.5,6.5,6,7.5,10,11,9.5,6.5,4,2.5,1.5];
+const isPeak = h => (h>=9&&h<12)||(h>=18&&h<22);
+
+/* ══════════ STATE ══════════ */
+let S, flows = [], bayEls = [], carEls = [], plate = 1000;
+
+function freshState(){
+  return {
+    min: 6*60, day: 1, run: true, speed: 60,
+    wt:"S52", wind:5.5, cloud:.15, arrMult:1, tdc:22, tac:12,
+    imp:true, exp:true, night:true, curt:true, auto:true,
+    wNoise:0, cNoise:0, soc:.55,
+    p:{ wind:0, sDC:0, sAC:0, sR:0, ev:0, evDC:0, evAC:0, rest:0, batt:0, grid:0, exp:0, curtail:0 },
+    t:{ ev:0, rev:0, gridLoad:0, gridAll:0, cost:0, expE:0, expR:0, load:0, cars:0, lost:0, curt:0 },
+    bays:[], queue:[], series:[], rotorAng:0
+  };
+}
+function makeBays(){
+  const b=[];
+  for(let i=0;i<DC.n;i++) b.push({id:"DC"+(i+1), type:"dc", kW:DC.kW, car:null, p:0});
+  for(let i=0;i<AC.n;i++) b.push({id:"AC"+(i+1), type:"ac", kW:AC.kW, car:null, p:0});
+  return b;
+}
+
+/* ══════════ PHYSICS ══════════ */
+const hourOf = () => S.min/60;
+
+function windAtHub(){
+  const T = TURBINES[S.wt];
+  const diurnal = 1 + 0.22*Math.sin((hourOf()-15)/24*2*Math.PI);
+  const v10 = clamp(S.wind*diurnal + S.wNoise, 0, 40);
+  return v10 * Math.pow(T.hub/10, 1/7);           // power-law shear
+}
+function windPower(v){
+  const T = TURBINES[S.wt];
+  if(v < T.cutIn || v > T.cutOut) return 0;
+  if(v >= T.rated) return T.kW;
+  return T.kW * (v**3 - T.cutIn**3) / (T.rated**3 - T.cutIn**3);
+}
+function irradiance(h){
+  const a=6.1, b=18.9;
+  if(h<=a||h>=b) return 0;
+  return 1020 * Math.pow(Math.sin(Math.PI*(h-a)/(b-a)), 1.3);
+}
+function pvPower(kWp){
+  const G = irradiance(hourOf()) * (1 - 0.78*S.cloud);
+  if(G<=0) return 0;
+  const tCell = 29 + G/1000*26;
+  return kWp * (G/1000) * Math.max(0, 1 - 0.0038*(tCell-25)) * 0.92;
+}
+const smoothProfile = arr => {
+  const h = hourOf(), i = Math.floor(h)%24, f = h-Math.floor(h);
+  return lerp(arr[i], arr[(i+1)%24], f);
+};
+
+/* ══════════ SIMULATION STEP (1 sim-minute) ══════════ */
+function step(){
+  const dtH = 1/60, h = hourOf();
+
+  /* weather drift */
+  if(S.auto){
+    S.wNoise = clamp(S.wNoise*0.94 + (Math.random()-0.5)*0.85, -4.5, 4.5);
+    S.cNoise = clamp(S.cNoise + (Math.random()-0.5)*0.012, -0.35, 0.35);
+  } else { S.wNoise*=0.9; S.cNoise*=0.9; }
+  const cloudEff = clamp(S.cloud + S.cNoise, 0, 1);
+
+  /* generation */
+  const v = windAtHub();
+  S.p.wind = windPower(v);
+  const G = irradiance(h) * (1 - 0.78*cloudEff);
+  const tCell = 29 + G/1000*26, der = Math.max(0, 1-0.0038*(tCell-25));
+  const pvOf = kWp => kWp*(G/1000)*der*0.92;
+  S.p.sDC = pvOf(PV.dc); S.p.sAC = pvOf(PV.ac); S.p.sR = pvOf(PV.rest);
+  const gen = S.p.wind + S.p.sDC + S.p.sAC + S.p.sR;
+
+  /* restaurant */
+  S.p.rest = smoothProfile(REST_LOAD) * rnd(0.94,1.06);
+
+  /* arrivals */
+  if(Math.random() < smoothProfile(ARRIVALS)*S.arrMult/60) arrive();
+  serveQueue();
+
+  /* charger demand */
+  let dcDem=0, acDem=0;
+  for(const b of S.bays){
+    b.p = 0;
+    if(!b.car) continue;
+    const c = b.car;
+    let p = Math.min(b.kW, b.type==="dc" ? c.dc : c.ac);
+    if(c.soc > 0.80) p *= Math.max(0.12, 1 - (c.soc-0.80)/0.20*0.85);
+    b.p = p;
+    if(b.type==="dc") dcDem += p; else acDem += p;
+  }
+
+  /* throttle AC bays when the site would otherwise import at peak tariff */
+  let acFactor = 1;
+  const battAvail = Math.min(BESS.pMax, Math.max(0,(S.soc-BESS.socMin))*BESS.cap*BESS.eff/dtH);
+  if(S.curt && isPeak(h) && gen + battAvail < S.p.rest + dcDem + acDem) acFactor = 0.45;
+  /* if grid import is blocked, curtail whatever the plant cannot cover */
+  let headroom = gen + battAvail + (S.imp ? GRID.maxImport : 0) - S.p.rest - dcDem;
+  if(acDem*acFactor > Math.max(0,headroom)) acFactor = clamp(Math.max(0,headroom)/Math.max(acDem,0.01),0,acFactor);
+  let dcFactor = 1;
+  if(!S.imp){
+    const hr2 = gen + battAvail - S.p.rest;
+    if(dcDem > Math.max(0,hr2)) dcFactor = clamp(Math.max(0,hr2)/Math.max(dcDem,0.01),0,1);
+  }
+  S.p.curtail = dcDem*(1-dcFactor) + acDem*(1-acFactor);
+
+  /* deliver energy */
+  S.p.evDC = 0; S.p.evAC = 0;
+  for(const b of S.bays){
+    if(!b.car) continue;
+    b.p *= (b.type==="dc" ? dcFactor : acFactor);
+    const e = b.p*dtH, c = b.car;
+    c.soc = Math.min(1, c.soc + e/c.cap);
+    c.kWh += e;
+    const rate = b.type==="dc" ? S.tdc : S.tac;
+    c.cost += e*rate;
+    S.t.ev += e; S.t.rev += e*rate;
+    if(b.type==="dc") S.p.evDC += b.p; else S.p.evAC += b.p;
+    if(c.soc >= c.target - 1e-4) depart(b, "target reached");
+  }
+  S.p.ev = S.p.evDC + S.p.evAC;
+
+  /* ── energy management dispatch ── */
+  const load = S.p.rest + S.p.ev;
+  let net = gen - load, batt = 0, gridP = 0, expP = 0;
+
+  if(net > 0){
+    const room = (BESS.socMax - S.soc)*BESS.cap;
+    const chMax = Math.min(BESS.pMax, room/dtH/BESS.eff);
+    batt = Math.min(net, chMax);
+    S.soc += batt*BESS.eff*dtH/BESS.cap;
+    expP = net - batt;
+    if(!S.exp){ S.t.curt += expP*dtH; expP = 0; }
+  } else {
+    /* overnight the BESS is held in reserve for the morning peak and the plaza
+       rides on cheap off-peak grid instead of cycling the battery */
+    const reserve = S.night && S.imp && h < 6;
+    const need = -net;
+    const dis = reserve ? 0 : Math.min(need, battAvail);
+    S.soc -= dis/BESS.eff*dtH/BESS.cap;
+    batt = -dis;
+    gridP = S.imp ? Math.min(need - dis, GRID.maxImport) : 0;
+  }
+  /* top the BESS up on off-peak grid before the morning rush */
+  let gridToBatt = 0;
+  if(S.night && S.imp && h < 6 && S.soc < BESS.nightTarget && batt >= 0){
+    const room = (BESS.nightTarget - S.soc)*BESS.cap;
+    gridToBatt = Math.max(0, Math.min(BESS.pMax - batt, room/dtH/BESS.eff, GRID.maxImport - gridP));
+    S.soc += gridToBatt*BESS.eff*dtH/BESS.cap;
+    batt += gridToBatt; gridP += gridToBatt;
+  }
+  S.soc = clamp(S.soc, 0, 1);
+  S.p.batt = batt; S.p.grid = gridP; S.p.exp = expP;
+
+  /* totals */
+  const tariff = isPeak(h) ? GRID.peak : GRID.off;
+  S.t.gridAll  += gridP*dtH;
+  S.t.gridLoad += (gridP-gridToBatt)*dtH;
+  S.t.cost     += gridP*dtH*tariff;
+  S.t.expE     += expP*dtH; S.t.expR += expP*dtH*GRID.exportRate;
+  S.t.load     += load*dtH;
+
+  /* queue patience */
+  for(let i=S.queue.length-1;i>=0;i--){
+    S.queue[i].wait++;
+    if(S.queue[i].wait > S.queue[i].patience){
+      S.t.lost++;
+      log(`<b style="color:var(--grid)">${S.queue[i].m}</b> left the queue after ${S.queue[i].wait} min`);
+      S.queue.splice(i,1);
+    }
+  }
+
+  /* sampling + rollover */
+  if(S.min % 5 === 0) S.series.push({h, w:S.p.wind, s:S.p.sDC+S.p.sAC+S.p.sR, b:Math.max(0,-batt), g:gridP, l:load, soc:S.soc});
+  S.min++;
+  if(S.min >= 1440){
+    S.min = 0; S.day++;
+    log(`<b style="color:var(--wind)">— Day ${S.day} —</b> ${fmt(S.t.ev,0)} kWh sold, ${fmt(S.t.rev-S.t.cost+S.t.expR,0)} ₹ margin`);
+    S.series = [];
+    S.t = { ev:0, rev:0, gridLoad:0, gridAll:0, cost:0, expE:0, expR:0, load:0, cars:0, lost:0, curt:0 };
+  }
+}
+
+/* ══════════ SESSIONS ══════════ */
+function newCar(){
+  const m = CARS[(Math.random()*CARS.length)|0];
+  return { m:m.m, cap:m.cap, ac:m.ac, dc:m.dc, soc:rnd(0.08,0.42), target:rnd(0.78,0.95),
+           kWh:0, cost:0, wait:0, patience:(rnd(12,45))|0, color:PAINT[(Math.random()*PAINT.length)|0],
+           plate:"MH"+(12+((Math.random()*3)|0))+"·"+(++plate) };
+}
+function arrive(){
+  const c = newCar();
+  /* fast-charge preference falls as the DC premium widens */
+  const premium = S.tdc / Math.max(S.tac, 0.5);
+  c.wantDC = Math.random() < clamp(0.86 - 0.22*premium, 0.08, 0.85);
+  const bay = pick(c.wantDC?"dc":"ac") || (Math.random()<0.6 ? pick(c.wantDC?"ac":"dc") : null);
+  if(bay) assign(bay, c);
+  else if(S.queue.length < 8) { S.queue.push(c); log(`<b>${c.m}</b> queued — all bays busy`); }
+  else { S.t.lost++; log(`<b style="color:var(--grid)">${c.m}</b> turned away, plaza full`); }
+}
+const pick = type => S.bays.find(b => b.type===type && !b.car) || null;
+function assign(bay, c){
+  bay.car = c; S.t.cars++;
+  log(`<b style="color:var(--ev)">${bay.id}</b> ${c.m} plugged in at ${(c.soc*100)|0}%`);
+}
+function serveQueue(){
+  for(let i=0;i<S.queue.length;i++){
+    const c = S.queue[i];
+    const bay = pick(c.wantDC?"dc":"ac") || pick(c.wantDC?"ac":"dc");
+    if(bay){ S.queue.splice(i,1); i--; assign(bay,c); }
+  }
+}
+function depart(bay, why){
+  const c = bay.car;
+  log(`<b style="color:var(--solar)">${bay.id}</b> ${c.m} done — ${fmt(c.kWh,1)} kWh · ₹${fmt(c.cost,0)}`);
+  bay.car = null; bay.p = 0;
+}
+
+/* ══════════ LOG ══════════ */
+let logBuf = [];
+function log(html){
+  logBuf.push(`<time>${clockStr()}</time><span>${html}</span>`);
+  if(logBuf.length > 400) logBuf.splice(0, logBuf.length-400);
+}
+function flushLog(){
+  if(!logBuf.length) return;
+  const box = $("#log");
+  const take = logBuf.splice(Math.max(0, logBuf.length-14));
+  for(const html of take){
+    const el = document.createElement("div"); el.innerHTML = html; box.prepend(el);
+  }
+  logBuf.length = 0;
+  while(box.children.length > 90) box.lastChild.remove();
+}
+const clockStr = () => String((S.min/60)|0).padStart(2,"0")+":"+String(S.min%60|0).padStart(2,"0");
+const fmt = (n,d=0) => n.toLocaleString("en-IN",{minimumFractionDigits:d, maximumFractionDigits:d});
+
+/* ══════════ SCENE BUILD ══════════ */
+const BAY_XY = [
+  {x:358,y:474,s:1},{x:464,y:474,s:1},{x:570,y:474,s:1},{x:676,y:474,s:1},
+  {x:782,y:476,s:.74},{x:844,y:476,s:.74},{x:906,y:476,s:.74},
+  {x:968,y:476,s:.74},{x:1030,y:476,s:.74},{x:1092,y:476,s:.74}
+];
+function buildScene(){
+  /* stars */
+  const st = $("#stars"); st.innerHTML="";
+  for(let i=0;i<90;i++){
+    const c = document.createElementNS(SVGNS,"circle");
+    c.setAttribute("cx", (Math.random()*1400).toFixed(0));
+    c.setAttribute("cy", (Math.random()*380).toFixed(0));
+    c.setAttribute("r", (Math.random()*1.3+0.3).toFixed(2));
+    c.setAttribute("fill","#fff"); c.setAttribute("opacity", (0.3+Math.random()*0.7).toFixed(2));
+    st.appendChild(c);
+  }
+  /* clouds */
+  const cl = $("#clouds"); cl.innerHTML="";
+  for(let i=0;i<5;i++){
+    const g = document.createElementNS(SVGNS,"g");
+    g.dataset.x = (i*300+Math.random()*180).toFixed(0);
+    g.dataset.y = (40+Math.random()*150).toFixed(0);
+    g.dataset.sc = (0.6+Math.random()*0.8).toFixed(2);
+    g.innerHTML = `<ellipse cx="0" cy="0" rx="62" ry="21" fill="#fff"/>
+                   <ellipse cx="-42" cy="8" rx="38" ry="15" fill="#fff"/>
+                   <ellipse cx="46" cy="7" rx="44" ry="17" fill="#fff"/>
+                   <ellipse cx="8" cy="-14" rx="34" ry="18" fill="#fff"/>`;
+    cl.appendChild(g);
+  }
+  /* cars + pedestals */
+  const cg = $("#cars"); cg.innerHTML=""; carEls=[];
+  BAY_XY.forEach((p,i)=>{
+    const isDC = i < DC.n;
+    const wrap = document.createElementNS(SVGNS,"g");
+    wrap.setAttribute("transform",`translate(${p.x},${p.y}) scale(${p.s})`);
+    wrap.innerHTML = `
+      <g>
+        <rect x="46" y="-56" width="17" height="56" rx="3" fill="#28323C" stroke="#3E4C58"/>
+        <rect x="49" y="-51" width="11" height="15" rx="1.5" fill="${isDC?'#3A1E1C':'#12312A'}"/>
+        <circle class="pedled" cx="54.5" cy="-24" r="3" fill="${isDC?'#FF7A6B':'#45E0A0'}" opacity=".25"/>
+      </g>
+      <g class="carslide" style="opacity:0; transform:translateX(-190px)">
+        <path class="cbody" d="M-42,-6 C-42,-9 -40,-11 -36,-11 L-30,-11 C-24,-24 -16,-30 -2,-31 L14,-31 C24,-30 30,-25 37,-14 L42,-12 C45,-11 46,-9 46,-6 L46,-2 C46,0 45,1 43,1 L-40,1 C-42,1 -42,0 -42,-2 Z" fill="#D8DEE6"/>
+        <path d="M-25,-13 C-20,-23 -14,-27 -2,-28 L-1,-13 Z M2,-28 L13,-28 C21,-27 26,-22 31,-13 L2,-13 Z" fill="#101A22" opacity=".8"/>
+        <rect x="-46" y="-9" width="6" height="5" rx="2" fill="#FFD27A" opacity=".8"/>
+        <rect x="44" y="-9" width="5" height="4" rx="2" fill="#FF7A6B" opacity=".7"/>
+        <circle cx="-24" cy="1" r="8" fill="#121A20"/><circle cx="-24" cy="1" r="3.4" fill="#5B6874"/>
+        <circle cx="26" cy="1" r="8" fill="#121A20"/><circle cx="26" cy="1" r="3.4" fill="#5B6874"/>
+        <path class="cable" d="M46,-30 C36,-30 34,-20 30,-18" fill="none" stroke="#5A6B7A" stroke-width="2.6" stroke-linecap="round" stroke-dasharray="5 5" opacity="0"/>
+        <g class="csoc" opacity="0">
+          <rect x="-20" y="-44" width="44" height="7" rx="1.5" fill="#0C1620" stroke="#2A3D50" stroke-width=".8"/>
+          <rect class="csocf" x="-19" y="-43" width="10" height="5" rx="1" fill="#45E0A0"/>
+        </g>
+      </g>`;
+    cg.appendChild(wrap);
+    carEls.push({ slide:wrap.querySelector(".carslide"), body:wrap.querySelector(".cbody"),
+                  cable:wrap.querySelector(".cable"), soc:wrap.querySelector(".csoc"),
+                  socf:wrap.querySelector(".csocf"), led:wrap.querySelector(".pedled") });
+  });
+  /* flows */
+  const defs = [["fWind",600],["fSolDC",90],["fEvDC",240],["fSolAC",70],["fEvAC",132],["fSolR",60],["fRest",80],["fBatt",300],["fGrid",400]];
+  flows = defs.map(([id,max]) => ({ el:$("#"+id), max, off:0, spd:0 }));
+  flows.forEach(f => { f.el.setAttribute("stroke-dasharray","9 11"); f.el.style.opacity=0; });
+}
+
+/* ══════════ SKY ══════════ */
+const SKY = [
+  {h:0,   t:"#050A14", b:"#0C1626"},{h:4.6, t:"#0A1230", b:"#251F42"},
+  {h:6.2, t:"#26314F", b:"#E08A5A"},{h:8,   t:"#3B78BC", b:"#A9D4EE"},
+  {h:12.5,t:"#2A6BC0", b:"#9CCBEA"},{h:16.5,t:"#3A76BE", b:"#BCD9EB"},
+  {h:18.4,t:"#3A3C70", b:"#E4763F"},{h:19.7,t:"#111A34", b:"#33263F"},
+  {h:24,  t:"#050A14", b:"#0C1626"}
+];
+const hex2 = h => [parseInt(h.slice(1,3),16),parseInt(h.slice(3,5),16),parseInt(h.slice(5,7),16)];
+const mix = (a,b,t) => { const A=hex2(a),B=hex2(b);
+  return "#"+[0,1,2].map(i=>Math.round(lerp(A[i],B[i],t)).toString(16).padStart(2,"0")).join(""); };
+function skyColors(h){
+  for(let i=0;i<SKY.length-1;i++){
+    if(h>=SKY[i].h && h<=SKY[i+1].h){
+      const t=(h-SKY[i].h)/(SKY[i+1].h-SKY[i].h);
+      return [mix(SKY[i].t,SKY[i+1].t,t), mix(SKY[i].b,SKY[i+1].b,t)];
+    }
+  }
+  return [SKY[0].t, SKY[0].b];
+}
+
+/* ══════════ RENDER ══════════ */
+let cloudX = 0, uiTick = 0;
+function render(rdt){
+  const h = hourOf(), T = TURBINES[S.wt];
+
+  /* sky + celestial */
+  const [top,bot] = skyColors(h);
+  $("#skyTop").setAttribute("stop-color",top); $("#skyBot").setAttribute("stop-color",bot);
+  const night = clamp((Math.abs(h-12.5)-5.4)/1.6, 0, 1);
+  $("#stars").setAttribute("opacity", night*0.9);
+  const dayF = clamp((h-6.1)/(18.9-6.1),0,1), on = h>6.1 && h<18.9;
+  const sx = 120+dayF*1160, sy = 430 - Math.sin(Math.PI*dayF)*350;
+  $("#sunG").setAttribute("transform",`translate(${sx.toFixed(0)},${sy.toFixed(0)})`);
+  $("#sunG").setAttribute("opacity", on?1:0);
+  const mf = h<6.1 ? (h+5.1)/11.2 : (h-18.9)/11.2;
+  $("#moon").setAttribute("cx", (120+mf*1160).toFixed(0));
+  $("#moon").setAttribute("cy", (430-Math.sin(Math.PI*mf)*320).toFixed(0));
+  $("#moon").setAttribute("opacity", on?0:0.85);
+
+  /* clouds */
+  cloudX = (cloudX + rdt*(6+S.wind*1.6)) % 1900;
+  [...$("#clouds").children].forEach((g,i)=>{
+    const x = ((+g.dataset.x + cloudX) % 1800) - 200;
+    g.setAttribute("transform",`translate(${x.toFixed(0)},${g.dataset.y}) scale(${g.dataset.sc})`);
+  });
+  $("#clouds").setAttribute("opacity", (0.12 + clamp(S.cloud+S.cNoise,0,1)*0.62).toFixed(2));
+
+  /* rotor */
+  const v = windAtHub();
+  const rpm = (v<T.cutIn||v>T.cutOut) ? 0 : clamp(9+ v*1.5, 0, 32);
+  S.rotorAng = (S.rotorAng + rpm*6*rdt*(S.run?1:0)) % 360;
+  $("#blades").setAttribute("transform",`rotate(${S.rotorAng.toFixed(1)})`);
+  $("#wtName").textContent = `${T.name} · ${T.kW} kW`;
+  $("#wtOut").textContent  = `${fmt(S.p.wind,0)} kW  ·  ${(S.p.wind/T.kW*100).toFixed(0)}%`;
+  $("#wtWind").textContent = `${v.toFixed(1)} m/s @${T.hub}m` + (v>T.cutOut?"  CUT-OUT":"");
+
+  /* pv glow */
+  const gf = clamp(irradiance(h)*(1-0.78*clamp(S.cloud+S.cNoise,0,1))/1020, 0, 1);
+  $("#glowDC").setAttribute("opacity",(gf*0.55).toFixed(2));
+  $("#glowAC").setAttribute("opacity",(gf*0.55).toFixed(2));
+  $("#glowR1").setAttribute("opacity",(gf*0.45).toFixed(2));
+  $("#glowR2").setAttribute("opacity",(gf*0.62).toFixed(2));
+  $("#restOut").textContent = `${fmt(S.p.rest,0)} kW load · ${fmt(S.p.sR,0)} kW PV`;
+  [...$("#restWin").children].forEach(w => w.setAttribute("fill", night>0.35 ? "#FFCE7A" : "#101A22"));
+
+  /* bess + grid */
+  $("#battFill").setAttribute("y", (629 + 62*(1-S.soc)).toFixed(1));
+  $("#battFill").setAttribute("height", (62*S.soc).toFixed(1));
+  $("#battFill").setAttribute("opacity", S.p.batt<0 ? 0.62 : 0.34);
+  $("#socTxt").textContent = (S.soc*100).toFixed(0)+"%";
+  $("#battTxt").textContent = Math.abs(S.p.batt)<0.5 ? "idle"
+      : (S.p.batt>0 ? `charging ${fmt(S.p.batt,0)} kW` : `discharging ${fmt(-S.p.batt,0)} kW`);
+  $("#gridTxt").textContent = S.p.grid>0.5 ? `import ${fmt(S.p.grid,0)} kW`
+      : S.p.exp>0.5 ? `export ${fmt(S.p.exp,0)} kW` : "0 kW";
+  $("#gridTxt").setAttribute("fill", S.p.exp>0.5 ? "#45E0A0" : "#FF7A6B");
+
+  /* cars */
+  S.bays.forEach((b,i)=>{
+    const e = carEls[i];
+    if(b.car){
+      e.slide.style.transform = "translateX(0)";
+      e.slide.style.opacity = 1;
+      e.body.setAttribute("fill", b.car.color);
+      e.soc.setAttribute("opacity", 1);
+      e.socf.setAttribute("width", (2+40*b.car.soc).toFixed(1));
+      e.socf.setAttribute("fill", b.car.soc>0.8 ? "#FFB020" : "#45E0A0");
+      e.cable.setAttribute("opacity", b.p>0.2 ? 0.95 : 0.25);
+      e.cable.setAttribute("stroke", b.p>0.2 ? (b.type==="dc"?"#FF7A6B":"#45E0A0") : "#5A6B7A");
+      e.led.setAttribute("opacity", b.p>0.2 ? (0.55+0.45*Math.sin(performance.now()/240)) : 0.25);
+    } else {
+      e.slide.style.transform = "translateX(-190px)";
+      e.slide.style.opacity = 0;
+      e.cable.setAttribute("opacity", 0);
+      e.soc.setAttribute("opacity", 0);
+      e.led.setAttribute("opacity", .25);
+    }
+  });
+
+  /* flows: [wind, solarDC, evDC, solarAC, evAC, solarR, rest, batt, grid] */
+  const vals = [S.p.wind, S.p.sDC, S.p.evDC, S.p.sAC, S.p.evAC, S.p.sR, S.p.rest,
+                Math.abs(S.p.batt), Math.max(S.p.grid, S.p.exp)];
+  const dirs = [1,1,1,1,1,1,1, S.p.batt>0?-1:1, S.p.grid>0.2?1:-1];
+  flows.forEach((f,i)=>{
+    const kw = vals[i], k = clamp(kw/f.max, 0, 1);
+    if(kw < 0.4){ f.el.style.opacity = 0.05; f.spd = 0; }
+    else { f.el.style.opacity = (0.4+0.6*k).toFixed(2); f.spd = dirs[i]*(60+320*k); }
+    f.el.setAttribute("stroke-width", (2.2 + 8*k).toFixed(1));
+    f.off -= f.spd*rdt;
+    f.el.setAttribute("stroke-dashoffset", f.off.toFixed(1));
+  });
+  const busP = S.p.wind+S.p.sDC+S.p.sAC+S.p.sR;
+  $("#busLive").setAttribute("opacity", (0.08+0.5*clamp(busP/900,0,1)).toFixed(2));
+  $("#busTxt").textContent = `Σ gen ${fmt(busP,0)} kW  ·  Σ load ${fmt(S.p.rest+S.p.ev,0)} kW`;
+  $("#modeTag").textContent = S.p.grid>0.5 ? "IMPORTING" : S.p.exp>0.5 ? "EXPORTING" : "ISLANDED";
+  $("#modeTag").style.color = S.p.grid>0.5 ? "var(--grid)" : S.p.exp>0.5 ? "var(--ev)" : "var(--mut2)";
+
+  /* throttled DOM panels */
+  if(++uiTick % 8 === 0){ paintPanels(); drawChart(); flushLog(); }
+}
+
+function paintPanels(){
+  const h = hourOf();
+  $("#clk").textContent = clockStr();
+  $("#dayl").textContent = `Day ${S.day} · ${isPeak(h)?"Peak":"Off-peak"}`;
+  $("#tou").textContent = isPeak(h) ? `Peak ₹${GRID.peak}` : `Off-peak ₹${GRID.off}`;
+  $("#tou").style.color = isPeak(h) ? "var(--grid)" : "var(--mut2)";
+  $("#queueTag").textContent = `Queue ${S.queue.length}`;
+
+  const ren = S.t.load>0 ? clamp(1 - S.t.gridLoad/S.t.load,0,1)*100 : 100;
+  $("#kRen").textContent  = ren.toFixed(1)+"%";
+  $("#kRen").style.color  = ren>70?"var(--ev)":ren>40?"var(--solar)":"var(--grid)";
+  $("#kEv").textContent   = fmt(S.t.ev,0);
+  $("#kRev").textContent  = "₹"+fmt(S.t.rev,0);
+  $("#kCost").textContent = "₹"+fmt(S.t.cost,0);
+  $("#kExp").textContent  = "₹"+fmt(S.t.expR,0);
+  const margin = S.t.rev - S.t.cost + S.t.expR;
+  $("#kMar").textContent  = "₹"+fmt(margin,0);
+  $("#kMar").style.color  = margin>=0?"var(--ev)":"var(--grid)";
+  $("#kCars").textContent = `${S.t.cars} / ${S.t.lost}`;
+  $("#kCo2").textContent  = fmt(Math.max(0,(S.t.load-S.t.gridLoad))*GRID.co2 + S.t.expE*GRID.co2, 0);
+
+  const T = TURBINES[S.wt];
+  $("#specBox").innerHTML = `
+    <div class="row"><span>Rotor / hub</span><b>Ø${T.d} m · ${T.hub} m</b></div>
+    <div class="row"><span>Cut-in / rated / cut-out</span><b>${T.cutIn} · ${T.rated} · ${T.cutOut} m/s</b></div>
+    <div class="row"><span>PV installed</span><b>${PV.dc+PV.ac+PV.rest} kWp</b></div>
+    <div class="row"><span>Charge points</span><b>${DC.n}×${DC.kW} kW DC · ${AC.n}×${AC.kW} kW AC</b></div>
+    <div class="row"><span>Grid drawn today</span><b>${fmt(S.t.gridAll,0)} kWh</b></div>
+    <div class="row"><span>Exported today</span><b>${fmt(S.t.expE,0)} kWh</b></div>
+    <div class="row"><span>Curtailed / throttled</span><b>${fmt(S.t.curt,0)} kWh</b></div>`;
+
+  /* bay cards */
+  S.bays.forEach((b,i)=>{
+    const el = bayEls[i];
+    if(b.car){
+      const c = b.car;
+      el.innerHTML = `<div class="bh"><span class="bid">${b.id}</span><span class="bkw">${b.p.toFixed(1)} kW</span></div>
+        <div class="bcar">${c.m} <span style="color:var(--mut2)">${c.plate}</span></div>
+        <div class="socbar"><i style="width:${(c.soc*100).toFixed(0)}%;background:${c.soc>0.8?'var(--solar)':'var(--ev)'}"></i></div>
+        <div class="bstat"><span>${(c.soc*100).toFixed(0)}% → ${(c.target*100)|0}%</span><span>₹${fmt(c.cost,0)}</span></div>`;
+    } else {
+      el.innerHTML = `<div class="bh"><span class="bid">${b.id}</span><span class="bkw">${b.kW} kW</span></div>
+        <div class="bfree">Available</div>`;
+    }
+  });
+}
+
+/* ══════════ CHART ══════════ */
+function drawChart(){
+  const cv = $("#chart"), dpr = Math.min(2, devicePixelRatio||1);
+  const W = cv.clientWidth, H = 220;
+  if(cv.width !== W*dpr || cv.height !== H*dpr){ cv.width=W*dpr; cv.height=H*dpr; cv.style.height=H+"px"; }
+  const g = cv.getContext("2d"); g.setTransform(dpr,0,0,dpr,0,0); g.clearRect(0,0,W,H);
+  const L=44, R=38, Tp=12, B=22, pw=W-L-R, ph=H-Tp-B;
+
+  let peak = 200;
+  for(const d of S.series) peak = Math.max(peak, d.w+d.s+d.b+d.g, d.l);
+  peak = Math.ceil(peak/100)*100;
+
+  g.strokeStyle="#16222E"; g.fillStyle="#4C5F72"; g.font="10px 'IBM Plex Mono',monospace";
+  for(let i=0;i<=4;i++){
+    const y = Tp+ph-ph*i/4;
+    g.beginPath(); g.moveTo(L,y); g.lineTo(L+pw,y); g.stroke();
+    g.textAlign="right"; g.fillText((peak*i/4).toFixed(0), L-6, y+3);
+  }
+  for(let hh=0;hh<=24;hh+=3){
+    const x = L+pw*hh/24;
+    g.strokeStyle = (hh>=9&&hh<12)||(hh>=18&&hh<22) ? "#2A1D22" : "#16222E";
+    g.beginPath(); g.moveTo(x,Tp); g.lineTo(x,Tp+ph); g.stroke();
+    g.textAlign="center"; g.fillStyle="#4C5F72"; g.fillText(String(hh).padStart(2,"0"), x, H-7);
+  }
+  if(S.series.length<2){ g.fillStyle="#3B4B5C"; g.textAlign="center"; g.fillText("collecting data…", L+pw/2, Tp+ph/2); return; }
+
+  const X = h => L+pw*h/24, Y = v => Tp+ph-ph*clamp(v/peak,0,1);
+  const band = (keys,color) => {
+    g.beginPath();
+    S.series.forEach((d,i)=>{ const tot=keys.reduce((a,k)=>a+d[k],0); i?g.lineTo(X(d.h),Y(tot)):g.moveTo(X(d.h),Y(tot)); });
+    for(let i=S.series.length-1;i>=0;i--){
+      const d=S.series[i], base=keys.slice(0,-1).reduce((a,k)=>a+d[k],0);
+      g.lineTo(X(d.h),Y(base));
+    }
+    g.closePath(); g.fillStyle=color; g.fill();
+  };
+  band(["w"],"rgba(87,211,232,.55)");
+  band(["w","s"],"rgba(255,176,32,.55)");
+  band(["w","s","b"],"rgba(157,123,255,.5)");
+  band(["w","s","b","g"],"rgba(255,122,107,.5)");
+
+  g.beginPath(); S.series.forEach((d,i)=> i?g.lineTo(X(d.h),Y(d.l)):g.moveTo(X(d.h),Y(d.l)));
+  g.strokeStyle="#fff"; g.lineWidth=1.6; g.stroke();
+
+  g.beginPath(); S.series.forEach((d,i)=>{ const y=Tp+ph-ph*d.soc; i?g.lineTo(X(d.h),y):g.moveTo(X(d.h),y); });
+  g.strokeStyle="#45E0A0"; g.lineWidth=1.2; g.setLineDash([4,4]); g.stroke(); g.setLineDash([]);
+  g.fillStyle="#45E0A0"; g.textAlign="left"; g.font="10px 'IBM Plex Mono',monospace";
+  for(let i=0;i<=4;i++) g.fillText((i*25)+"%", L+pw+6, Tp+ph-ph*i/4+3);
+}
+
+/* ══════════ LOOP ══════════ */
+let last = performance.now(), acc = 0;
+function frame(now){
+  const rdt = Math.min(0.08, (now-last)/1000); last = now;
+  if(S.run){
+    acc += rdt*S.speed;
+    let guard = 0;
+    while(acc >= 1 && guard++ < 2000){ step(); acc -= 1; }
+  }
+  render(rdt);
+  requestAnimationFrame(frame);
+}
+
+/* ══════════ WIRING ══════════ */
+function boot(){
+  S = freshState(); S.bays = makeBays();
+  $("#bays").innerHTML = "";
+  bayEls = S.bays.map(b=>{
+    const d = document.createElement("div");
+    d.className = "bay "+b.type; $("#bays").appendChild(d); return d;
+  });
+  buildScene();
+  $("#log").innerHTML = ""; logBuf = [];
+  log(`<b style="color:var(--wind)">Plaza online</b> — ${TURBINES[S.wt].name}, ${PV.dc+PV.ac+PV.rest} kWp PV, ${BESS.cap} kWh BESS`);
+  paintPanels(); drawChart();
+}
+
+$("#playBtn").onclick = e => { S.run = !S.run; e.target.textContent = S.run?"Pause":"Run"; e.target.classList.toggle("on", S.run); };
+$("#resetBtn").onclick = () => { const sp=S.speed, run=S.run; boot(); S.speed=sp; S.run=run; };
+document.querySelectorAll("[data-sp]").forEach(b => b.onclick = () => {
+  document.querySelectorAll("[data-sp]").forEach(x=>x.classList.remove("on"));
+  b.classList.add("on"); S.speed = +b.dataset.sp;
+});
+$("#wtSel").onchange = e => { S.wt = e.target.value; log(`Turbine swapped to <b>${TURBINES[S.wt].name}</b>`); };
+$("#wind").oninput = e => { S.wind = +e.target.value; $("#windV").textContent = (+e.target.value).toFixed(1); };
+$("#cloud").oninput = e => { S.cloud = +e.target.value/100; $("#cloudV").textContent = e.target.value; };
+$("#arr").oninput   = e => { S.arrMult = +e.target.value; $("#arrV").textContent = (+e.target.value).toFixed(1); };
+$("#tdc").oninput   = e => S.tdc = Math.max(0,+e.target.value||0);
+$("#tac").oninput   = e => S.tac = Math.max(0,+e.target.value||0);
+[["tImp","imp"],["tExp","exp"],["tNight","night"],["tCurt","curt"],["tAuto","auto"]].forEach(([id,key])=>{
+  $("#"+id).onchange = e => { S[key] = e.target.checked; e.target.closest(".tg").classList.toggle("act", e.target.checked); };
+});
+const PRESETS = {
+  clear:   {wind:9,  cloud:5,  arr:1.4, msg:"Clear, breezy afternoon"},
+  monsoon: {wind:6,  cloud:88, arr:0.7, msg:"Monsoon overcast — PV collapses"},
+  calm:    {wind:1.5,cloud:20, arr:0.4, msg:"Still night — BESS and grid only"},
+  storm:   {wind:27, cloud:70, arr:0.6, msg:"Gale — turbine near cut-out"}
+};
+document.querySelectorAll("[data-preset]").forEach(b => b.onclick = () => {
+  const p = PRESETS[b.dataset.preset];
+  S.wind=p.wind; S.cloud=p.cloud/100; S.arrMult=p.arr;
+  $("#wind").value=p.wind; $("#windV").textContent=p.wind.toFixed(1);
+  $("#cloud").value=p.cloud; $("#cloudV").textContent=p.cloud;
+  $("#arr").value=p.arr; $("#arrV").textContent=p.arr.toFixed(1);
+  log(`<b style="color:var(--solar)">Scenario</b> ${p.msg}`);
+});
+addEventListener("resize", () => drawChart());
+
+boot();
+requestAnimationFrame(frame);
+</script>
